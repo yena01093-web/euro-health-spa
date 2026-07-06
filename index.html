@@ -160,7 +160,7 @@
   /* ── Lightbox ────────────────────────────────────── */
   .lightbox { position: fixed; inset: 0; z-index: 500; background: rgba(5,10,18,0.92); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; padding: 40px; cursor: zoom-out; }
   .lightbox.visible { display: flex; }
-  .lightbox img { max-width: 90vw; max-height: 82vh; object-fit: contain; border-radius: 10px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); cursor: default; }
+  .lightbox img { max-width: 90vw; max-height: 82vh; object-fit: contain; border-radius: 10px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); cursor: zoom-out; }
   .lightbox-caption { position: absolute; bottom: 32px; left: 0; right: 0; text-align: center; color: #EDEDED; font-size: 15px; font-weight: 600; letter-spacing: 0.02em; }
   .lightbox-close { position: absolute; top: 24px; right: 32px; width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); color: #EDEDED; font-size: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s; }
   .lightbox-close:hover { background: rgba(255,255,255,0.18); }
@@ -439,8 +439,8 @@
 </section>
 
 <!-- ── 사진 확대 보기 (라이트박스) ── -->
-<div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
-  <div class="lightbox-close" onclick="closeLightbox(event)">✕</div>
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <div class="lightbox-close" onclick="closeLightbox()">✕</div>
   <img id="lightboxImg" src="" alt="">
   <div class="lightbox-caption" id="lightboxCaption"></div>
 </div>
@@ -475,8 +475,7 @@ function openLightbox(src, caption) {
   document.getElementById('lightboxCaption').textContent = caption || '';
   document.getElementById('lightbox').classList.add('visible');
 }
-function closeLightbox(e) {
-  if (e && e.target.id === 'lightboxImg') return; // 이미지 자체 클릭은 무시 (닫힘 방지)
+function closeLightbox() {
   document.getElementById('lightbox').classList.remove('visible');
 }
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLightbox(); });
