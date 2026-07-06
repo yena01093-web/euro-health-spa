@@ -99,6 +99,23 @@
   }
   .facility-name { font-size: 16px; font-weight: 700; color: #FAFAFA; }
 
+  /* ── Trainers ────────────────────────────────────── */
+  #trainers { padding: 120px 0 140px; }
+  .trainers-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 64px; }
+  .trainer-card { background: #0F1E35; border: 1px solid rgba(200,164,90,0.12); border-radius: 18px; padding: 34px 28px; text-align: center; transition: border-color 0.25s ease; }
+  .trainer-card:hover { border-color: rgba(200,164,90,0.35); }
+  .trainer-photo {
+    width: 96px; height: 96px; border-radius: 50%; margin: 0 auto 22px;
+    background: linear-gradient(135deg, #16283F, #0F1E35); border: 1px solid rgba(200,164,90,0.2);
+    display: flex; align-items: center; justify-content: center; color: #4A5E72;
+  }
+  .trainer-name { font-size: 18px; font-weight: 700; color: #F5F5F5; }
+  .trainer-role { font-size: 13px; color: #C8A45A; margin-top: 4px; letter-spacing: 0.02em; }
+  .trainer-desc { font-size: 13.5px; color: #6A8099; margin-top: 14px; line-height: 1.7; }
+  .trainer-certs { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 18px; }
+  .trainer-cert { font-size: 11.5px; color: #8FA3B8; border: 1px solid rgba(200,164,90,0.22); border-radius: 20px; padding: 4px 11px; }
+  .trainer-note { text-align: center; font-size: 12.5px; color: #4A5E72; margin-top: 28px; font-style: italic; }
+
   /* ── Programs ────────────────────────────────────── */
   #programs { padding: 140px 0; background: #0F1E35; border-top: 1px solid rgba(200,164,90,0.1); border-bottom: 1px solid rgba(200,164,90,0.1); }
   .programs-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: rgba(200,164,90,0.12); margin-top: 64px; border-radius: 20px; overflow: hidden; }
@@ -171,6 +188,7 @@
     .facility-grid { grid-template-columns: repeat(2, 1fr); }
     .facility-item.wide { grid-column: span 2; }
     .programs-grid { grid-template-columns: 1fr; }
+    .trainers-grid { grid-template-columns: 1fr; }
     .membership-grid { grid-template-columns: 1fr; }
     .contact-grid { grid-template-columns: 1fr; gap: 50px; }
     .form-row { grid-template-columns: 1fr; }
@@ -190,6 +208,7 @@
   <a href="#hero" class="logo">EURO <b>HEALTH·SPA</b></a>
   <div class="nav-links">
     <a href="#facility">시설안내</a>
+    <a href="#trainers">트레이너</a>
     <a href="#programs">프로그램</a>
     <a href="#membership">회원안내</a>
     <a href="#contact">오시는길</a>
@@ -255,14 +274,6 @@
           <img class="thumb-img" src="assets/gym-3.jpg" alt="스텝밀존" loading="lazy">
           <div class="facility-overlay"><div class="facility-name">스텝밀존</div></div>
         </div>
-        <div class="facility-item reveal" onclick="openLightbox('assets/gym-9.jpg','파워랙존')">
-          <img class="thumb-img" src="assets/gym-9.jpg" alt="파워랙존" loading="lazy">
-          <div class="facility-overlay"><div class="facility-name">파워랙존</div></div>
-        </div>
-        <div class="facility-item reveal" onclick="openLightbox('assets/gym-10.jpg','로우로우 머신')">
-          <img class="thumb-img" src="assets/gym-10.jpg" alt="로우로우 머신" loading="lazy">
-          <div class="facility-overlay"><div class="facility-name">로우로우 머신</div></div>
-        </div>
         <div class="facility-item wide reveal" onclick="openLightbox('assets/gym-8.jpg','신형 웨이트 머신존')">
           <img class="thumb-img" src="assets/gym-8.jpg" alt="신형 웨이트 머신존" loading="lazy">
           <div class="facility-overlay"><div class="facility-name">신형 웨이트 머신존</div></div>
@@ -293,6 +304,58 @@
         </div>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- ══════════════════ 트레이너 소개 ══════════════════
+     trainer-1.jpg ~ trainer-3.jpg 를 assets/에 넣고, 이름·자격증·소개를 실제 정보로 교체하면 됩니다.
+     (gym.html 트레이너 관리 데이터와 연동해 자동으로 채우는 것도 가능 — 필요하면 요청)
+-->
+<section id="trainers">
+  <div class="wrap">
+    <div class="eyebrow reveal">Our Team</div>
+    <h2 class="section-title reveal">트레이너 소개</h2>
+    <p class="section-sub reveal">체계적인 자격을 갖춘 전문 트레이너가 1:1로 함께합니다.</p>
+
+    <div class="trainers-grid">
+      <div class="trainer-card reveal">
+        <div class="trainer-photo">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+        </div>
+        <div class="trainer-name">트레이너 이름</div>
+        <div class="trainer-role">헤드 트레이너 · 웨이트 전문</div>
+        <div class="trainer-desc">체형 분석부터 목표 설정까지, 근력 향상과 체형 교정을 전문으로 지도합니다.</div>
+        <div class="trainer-certs">
+          <span class="trainer-cert">생활스포츠지도사 2급</span>
+          <span class="trainer-cert">경력 O년</span>
+        </div>
+      </div>
+      <div class="trainer-card reveal">
+        <div class="trainer-photo">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+        </div>
+        <div class="trainer-name">트레이너 이름</div>
+        <div class="trainer-role">다이어트 · 체형관리 전문</div>
+        <div class="trainer-desc">식단 컨설팅과 유산소 프로그램을 병행해 체지방 감량과 체형 관리를 도와드립니다.</div>
+        <div class="trainer-certs">
+          <span class="trainer-cert">NSCA-CPT</span>
+          <span class="trainer-cert">경력 O년</span>
+        </div>
+      </div>
+      <div class="trainer-card reveal">
+        <div class="trainer-photo">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+        </div>
+        <div class="trainer-name">트레이너 이름</div>
+        <div class="trainer-role">재활 · 회복케어 전문</div>
+        <div class="trainer-desc">부상 이력이나 체력이 부족한 회원분들도 안전하게 운동할 수 있도록 지도합니다.</div>
+        <div class="trainer-certs">
+          <span class="trainer-cert">운동재활전문가</span>
+          <span class="trainer-cert">경력 O년</span>
+        </div>
+      </div>
+    </div>
+    <div class="trainer-note reveal">* 실제 트레이너 정보로 순차 업데이트 예정입니다</div>
   </div>
 </section>
 
