@@ -428,11 +428,14 @@
     <div class="footer-links">
       <a href="#">개인정보처리방침</a>
       <a href="#">이용약관</a>
+      <a href="gym.html" style="opacity:.5">직원용</a>
       <a href="#hero">맨 위로 ↑</a>
     </div>
   </div>
 </footer>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
 window.addEventListener('scroll', () => {
   document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 20);
@@ -444,11 +447,48 @@ const ro = new IntersectionObserver((entries) => {
 }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
 revealEls.forEach(el => ro.observe(el));
 
-function handleSubmit(e) {
+// gym.html(회원관리 시스템)과 같은 Firebase 프로젝트 — gym_inquiries 컬렉션에 문의를 저장하면
+// 직원이 gym.html의 "상담문의" 탭에서 바로 확인하고 회원등록으로 이어갈 수 있음
+const FB_CONFIG = {
+  apiKey: "AIzaSyAeegIHOoGONYVSG89pE50X74LqbhlgGPs",
+  authDomain: "gym-attendance-452d4.firebaseapp.com",
+  projectId: "gym-attendance-452d4",
+  storageBucket: "gym-attendance-452d4.firebasestorage.app",
+  messagingSenderId: "456640045807",
+  appId: "1:456640045807:web:749af5e61bc55ae93ef11a"
+};
+firebase.initializeApp(FB_CONFIG);
+const db = firebase.firestore();
+
+async function handleSubmit(e) {
   e.preventDefault();
-  // TODO: 이메일 알림 연동 시 (EmailJS/Formspree 등) 여기에 전송 로직 추가
-  alert('상담 문의가 접수되었습니다. 담당자가 곧 연락드리겠습니다. (현재는 데모 상태로 실제 전송되지 않습니다)');
-  e.target.reset();
+  const form = e.target;
+  const btn = document.getElementById('submitBtn');
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '전송 중...';
+
+  const data = {
+    name: form.from_name.value,
+    phone: form.from_phone.value,
+    type: form.inquiry_type.value,
+    message: form.message.value || '',
+    handled: false,
+    source: 'website',
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  try {
+    await db.collection('gym_inquiries').add(data);
+    alert('상담 문의가 접수되었습니다. 담당자가 곧 연락드리겠습니다.');
+    form.reset();
+  } catch (err) {
+    console.error('문의 저장 실패:', err);
+    alert('접수 중 오류가 발생했습니다. 전화로 문의해주세요 (043-646-8833).');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalText;
+  }
 }
 </script>
 </body>

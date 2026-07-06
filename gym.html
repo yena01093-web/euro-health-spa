@@ -1,0 +1,2428 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>EURO HEALTH 회원관리</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --primary:#03A9F4;--bg:#FFFFFF;--card:#FFFFFF;--border:#DDE3EA;
+  --text:#1A2635;--muted:#7A8FA6;--green:#00966D;--red:#DC3545;--gold:#D97706;
+  --orange:#EA6C1A;--purple:#6D28D9;
+}
+body{font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── SETUP ── */
+#setup{position:fixed;inset:0;z-index:400;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
+.setup-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:26px 22px;max-width:440px;width:100%}
+.setup-logo{font-size:22px;font-weight:900;color:var(--primary);margin-bottom:6px}
+.setup-sub{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.5}
+.setup-step{background:var(--bg);border-radius:9px;padding:13px;margin-bottom:10px;border:1px solid var(--border)}
+.ss-n{font-size:11px;font-weight:700;color:var(--primary);letter-spacing:1px;margin-bottom:5px}
+.ss-t{font-size:12px;color:var(--muted);line-height:1.6}
+.ss-t a{color:var(--primary);text-decoration:none}
+.ss-t code{color:var(--gold);background:rgba(255,215,0,.1);padding:1px 5px;border-radius:4px;font-family:monospace}
+.cfg-ta{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 12px;font-size:12px;font-family:monospace;outline:none;resize:vertical;min-height:110px;transition:border-color .2s;margin-top:6px}
+.cfg-ta:focus{border-color:var(--primary)}
+.setup-err{color:var(--red);font-size:12px;margin-top:8px;display:none}
+
+/* ── HEADER ── */
+header{background:var(--card);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100}
+.logo{font-size:17px;font-weight:900;color:var(--primary)}.logo span{color:var(--text)}
+.hdr-right{display:flex;align-items:center;gap:8px}
+.hdr-time{font-size:12px;color:var(--muted)}
+.btn-setting{background:none;border:1px solid var(--border);color:var(--muted);padding:5px 9px;border-radius:7px;cursor:pointer;font-size:12px;transition:all .2s}
+.btn-setting:hover{border-color:var(--primary);color:var(--primary)}
+.fb-dot{width:7px;height:7px;border-radius:50%;background:var(--red);margin-right:4px;display:inline-block}
+.fb-dot.ok{background:var(--green)}
+
+/* ── TABS ── */
+.tabs{display:flex;background:var(--card);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:11px 15px;font-size:12px;font-weight:700;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:all .2s}
+.tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+
+/* ── PAGES ── */
+.page{display:none;padding:14px}
+.page.active{display:block}
+
+/* ── FORMS ── */
+.form-group{margin-bottom:11px}
+.form-label{font-size:12px;color:var(--muted);margin-bottom:5px;display:block}
+.form-input,.form-select{width:100%;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:11px 12px;color:var(--text);font-size:14px;font-family:inherit;outline:none;transition:border-color .2s}
+.form-input:focus,.form-select:focus{border-color:var(--primary)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:9px 15px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all .2s;font-family:inherit}
+.btn-p{background:var(--primary);color:#fff}
+.btn-p:hover{background:#0288D1}
+.btn-s{background:#EEF2F7;color:var(--text);border:1px solid var(--border)}
+.btn-s:hover{background:#DDE3EA}
+.btn-d{background:rgba(220,53,69,.1);color:var(--red);border:1px solid rgba(220,53,69,.25)}
+.btn-d:hover{background:rgba(220,53,69,.2)}
+.btn-go{background:rgba(217,119,6,.1);color:var(--gold);border:1px solid rgba(217,119,6,.3)}
+.btn-w{width:100%}
+.btn-sm{padding:5px 10px;font-size:11px;border-radius:6px}
+.submit-btn{width:100%;background:var(--primary);color:#fff;border:none;padding:13px;border-radius:10px;font-size:14px;font-weight:900;cursor:pointer;margin-top:8px}
+
+/* ── SECTION TITLE ── */
+.section-title{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:10px;letter-spacing:1px;text-transform:uppercase}
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+
+/* ── FACE PAGE ── */
+.face-wrap{position:relative;width:100%;border-radius:12px;overflow:hidden;background:#000;margin-bottom:10px;aspect-ratio:4/3}
+.face-wrap video{width:100%;height:100%;object-fit:cover;display:block}
+.face-wrap canvas{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
+.face-status-bar{position:absolute;bottom:0;left:0;right:0;padding:8px 12px;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);font-size:13px;font-weight:700;text-align:center}
+.face-status-bar.detecting{color:var(--primary)}
+.face-status-bar.matched{color:var(--green)}
+.face-status-bar.cooldown{color:var(--gold)}
+.face-status-bar.loading{color:var(--muted)}
+.face-status-bar.error{color:var(--red)}
+
+.face-controls{display:flex;gap:8px;margin-bottom:10px}
+.face-model-progress{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:13px;margin-bottom:10px}
+.fmp-title{font-size:12px;color:var(--muted);margin-bottom:8px}
+.fmp-step{font-size:12px;color:var(--text);padding:3px 0;display:flex;align-items:center;gap:6px}
+.fmp-step .dot{width:6px;height:6px;border-radius:50%;background:var(--muted)}
+.fmp-step.done .dot{background:var(--green)}
+.fmp-step.active .dot{background:var(--primary);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── MEMBER INFO CARD (face recognized overlay) ── */
+.mic-overlay{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.75);display:none;align-items:flex-end;justify-content:center;padding:0}
+.mic-overlay.visible{display:flex}
+.mic-card{background:linear-gradient(160deg,#FFFFFF,#E8F4FD);border:1px solid var(--border);border-radius:24px 24px 0 0;padding:24px 20px 32px;width:100%;max-width:480px;position:relative;animation:slideUp .3s ease;box-shadow:0 -4px 24px rgba(3,169,244,.12)}
+@keyframes slideUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
+.mic-photo{width:80px;height:80px;border-radius:50%;overflow:hidden;margin:0 auto 12px;border:3px solid var(--primary);background:var(--border);display:flex;align-items:center;justify-content:center;font-size:32px}
+.mic-photo img{width:100%;height:100%;object-fit:cover}
+.mic-name{font-size:24px;font-weight:900;text-align:center;margin-bottom:4px}
+.mic-id{font-size:12px;color:var(--muted);text-align:center;margin-bottom:14px}
+.mic-row{display:flex;justify-content:space-around;margin-bottom:14px}
+.mic-cell{text-align:center}
+.mic-cell-val{font-size:18px;font-weight:900;color:var(--primary)}
+.mic-cell-val.expired{color:var(--red)}
+.mic-cell-val.warning{color:var(--gold)}
+.mic-cell-lbl{font-size:11px;color:var(--muted);margin-top:2px}
+.mic-badge{display:inline-block;padding:5px 16px;border-radius:20px;font-size:13px;font-weight:700;margin:0 auto 12px;display:block;text-align:center;width:fit-content;margin:0 auto 14px}
+.mic-badge.active{background:rgba(0,150,109,.12);color:var(--green);border:1px solid rgba(0,150,109,.3)}
+.mic-badge.expired{background:rgba(220,53,69,.12);color:var(--red);border:1px solid rgba(220,53,69,.3)}
+.mic-timer{height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:4px}
+.mic-timer-bar{height:100%;background:var(--primary);transition:width linear}
+.mic-dismiss{position:absolute;top:14px;right:16px;background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer}
+.mic-checkin-type{font-size:13px;text-align:center;margin-bottom:10px;font-weight:700}
+
+/* ── STATS ── */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.stat-num{font-size:26px;font-weight:900;color:var(--primary)}
+.stat-label{font-size:11px;color:var(--muted);margin-top:3px}
+
+/* ── MEMBER CARDS (list) ── */
+.member-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:13px;margin-bottom:8px;display:flex;align-items:center;gap:11px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.member-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;flex-shrink:0;overflow:hidden}
+.member-avatar img{width:100%;height:100%;object-fit:cover}
+.member-card-info{flex:1;min-width:0}
+.member-card-name{font-size:14px;font-weight:700;margin-bottom:2px}
+.member-card-detail{font-size:12px;color:var(--muted)}
+.member-card-actions{display:flex;gap:5px}
+
+/* ── CHECKIN LIST ── */
+.checkin-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:11px 13px;display:flex;align-items:center;gap:11px;margin-bottom:7px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.checkin-info{flex:1}
+.checkin-name{font-size:14px;font-weight:700;margin-bottom:1px}
+.checkin-detail{font-size:11px;color:var(--muted)}
+.checkin-time{font-size:11px;color:var(--primary);font-weight:700}
+.status-badge{font-size:10px;font-weight:700;padding:3px 7px;border-radius:4px}
+.status-in{background:rgba(0,150,109,.12);color:var(--green)}
+.status-out{background:rgba(220,53,69,.12);color:var(--red)}
+.status-active{background:rgba(3,169,244,.12);color:var(--primary)}
+.status-expired{background:rgba(220,53,69,.12);color:var(--red)}
+.status-face{background:rgba(109,40,217,.12);color:var(--purple)}
+
+/* ── FACE REGISTRATION ── */
+.face-reg-box{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px}
+.face-reg-preview{width:100%;border-radius:10px;overflow:hidden;background:#000;position:relative;margin-bottom:10px}
+.face-reg-preview video{width:100%;display:block;border-radius:10px}
+.face-reg-preview canvas{display:none}
+.face-reg-photo{width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--green);margin-right:12px;display:none}
+.face-reg-status{font-size:13px;font-weight:700;margin-bottom:8px}
+.face-reg-status.ok{color:var(--green)}
+.face-reg-status.none{color:var(--muted)}
+.face-reg-btns{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ── TICKET GRID ── */
+.ticket-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.ticket-option{background:var(--card);border:2px solid var(--border);border-radius:10px;padding:12px;text-align:center;cursor:pointer;transition:all .2s}
+.ticket-option.selected{border-color:var(--primary);background:rgba(3,169,244,.08)}
+.ticket-name{font-size:13px;font-weight:700;margin-bottom:3px}
+.ticket-price{font-size:15px;font-weight:900;color:var(--gold)}
+.ticket-period{font-size:11px;color:var(--muted)}
+
+/* ── DATA MANAGEMENT ── */
+.data-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px}
+.data-card-title{font-size:14px;font-weight:700;margin-bottom:10px}
+.data-card-desc{font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6}
+.data-info-row{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid var(--border)}
+.data-info-row:last-child{border-bottom:none}
+
+/* ── SEARCH ── */
+.search-input{width:100%;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:11px 12px;color:var(--text);font-size:14px;margin-bottom:11px;font-family:inherit;outline:none}
+.search-input:focus{border-color:var(--primary)}
+
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;align-items:flex-end}
+.modal-overlay.visible{display:flex}
+.modal{background:var(--card);width:100%;border-radius:20px 20px 0 0;padding:22px 18px;border-top:1px solid var(--border);max-height:85vh;overflow-y:auto}
+.modal h3{font-size:16px;font-weight:900;margin-bottom:14px}
+
+/* ── SETTINGS MODAL ── */
+.sett-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;align-items:flex-end}
+.sett-overlay.visible{display:flex}
+.sett-modal{background:var(--card);width:100%;border-radius:20px 20px 0 0;padding:22px 18px;border-top:1px solid var(--border);max-height:85vh;overflow-y:auto}
+.sett-sec{margin-bottom:18px}
+.sett-sec-ttl{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:9px}
+.fb-status{display:flex;align-items:center;gap:6px;font-size:12px;padding:7px 10px;border-radius:8px;margin-bottom:11px}
+.fb-status.on{background:rgba(0,150,109,.1);color:var(--green);border:1px solid rgba(0,150,109,.3)}
+.fb-status.off{background:rgba(220,53,69,.1);color:var(--red);border:1px solid rgba(220,53,69,.3)}
+
+/* ── PAYMENT ── */
+.payment-item{display:flex;justify-content:space-between;padding:7px 0;font-size:13px;border-bottom:1px solid var(--border)}
+.payment-total{display:flex;justify-content:space-between;padding:13px 0;font-size:15px;font-weight:900;color:var(--primary)}
+.pay-btn{width:100%;background:var(--primary);color:#fff;border:none;padding:13px;border-radius:10px;font-size:14px;font-weight:900;cursor:pointer;margin-bottom:7px}
+.cancel-btn{width:100%;background:var(--border);color:var(--text);border:none;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer}
+
+/* ── ADMIN PASSWORD MODAL ── */
+.pw-overlay{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;padding:20px}
+.pw-overlay.visible{display:flex}
+.pw-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px 24px;width:100%;max-width:340px;text-align:center}
+.pw-icon{font-size:40px;margin-bottom:10px}
+.pw-title{font-size:18px;font-weight:900;margin-bottom:4px}
+.pw-sub{font-size:12px;color:var(--muted);margin-bottom:20px}
+.pw-input{width:100%;background:var(--bg);border:2px solid var(--border);border-radius:10px;padding:14px;color:var(--text);font-size:22px;text-align:center;letter-spacing:6px;outline:none;font-family:monospace;transition:border-color .2s;margin-bottom:6px}
+.pw-input:focus{border-color:var(--primary)}
+.pw-error{font-size:12px;color:var(--red);margin-bottom:10px;height:16px}
+.pw-numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.pw-key{background:var(--border);border:none;color:var(--text);border-radius:10px;padding:14px;font-size:18px;font-weight:700;cursor:pointer;transition:all .2s;font-family:inherit}
+.pw-key:hover{background:#DDE3EA;color:var(--primary)}
+.pw-key:active{transform:scale(.94)}
+.pw-key.del{font-size:16px;color:var(--muted)}
+.pw-key.ok{background:var(--primary);color:#fff;grid-column:span 2}
+.pw-key.ok:hover{background:#0288D1}
+.pw-cancel{background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:4px 8px}
+/* 관리자 상태 표시 */
+.admin-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:4px 9px;border-radius:20px;cursor:pointer;transition:all .2s;border:none}
+.admin-badge.locked{background:rgba(220,53,69,.1);color:var(--red);border:1px solid rgba(220,53,69,.2)}
+.admin-badge.unlocked{background:rgba(0,150,109,.1);color:var(--green);border:1px solid rgba(0,150,109,.2)}
+.admin-badge:hover{opacity:.8}
+/* ── POINTS ── */
+.mic-points-row{display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(217,119,6,.08);border:1px solid rgba(217,119,6,.25);border-radius:12px;padding:10px 16px;margin-bottom:14px}
+.mic-points-num{font-size:28px;font-weight:900;color:var(--gold)}
+.mic-points-lbl{font-size:12px;color:var(--muted);line-height:1.3}
+.mic-points-new{font-size:11px;color:var(--green);font-weight:700}
+.points-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:rgba(217,119,6,.1);color:var(--gold);border:1px solid rgba(217,119,6,.3)}
+.btn-pts{background:rgba(217,119,6,.1);color:var(--gold);border:1px solid rgba(217,119,6,.3)}
+.btn-pts:hover{background:rgba(217,119,6,.2)}
+.pts-ctrl{display:flex;align-items:center;gap:3px}
+.btn-pts-adj{background:rgba(217,119,6,.1);color:var(--gold);border:1px solid rgba(217,119,6,.3);width:26px;height:26px;padding:0;font-size:16px;font-weight:900;border-radius:6px;cursor:pointer;font-family:inherit;line-height:1;transition:all .2s}
+.btn-pts-adj:hover{background:rgba(217,119,6,.22)}
+
+/* ── TRAINER ── */
+.trainer-card-overlay{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.75);display:none;align-items:flex-end;justify-content:center}
+.trainer-card-overlay.visible{display:flex}
+.trainer-card{background:linear-gradient(160deg,#FFFFFF,#E8FDF3);border:1px solid #DDE3EA;border-radius:24px 24px 0 0;padding:24px 20px 32px;width:100%;max-width:480px;position:relative;animation:slideUp .3s ease;box-shadow:0 -4px 24px rgba(0,150,109,.15)}
+.trainer-badge{display:inline-block;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:700;margin:0 auto 12px;text-align:center;width:fit-content;background:rgba(0,150,109,.12);color:var(--green);border:1px solid rgba(0,150,109,.3)}
+.trainer-specialty{font-size:13px;color:var(--muted);text-align:center;margin-bottom:14px}
+.trainer-status-row{display:flex;justify-content:center;gap:20px;margin-bottom:14px}
+.trainer-stat{text-align:center}
+.trainer-stat-val{font-size:20px;font-weight:900;color:var(--green)}
+.trainer-stat-lbl{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* ── ALERT / TOAST ── */
+.alert{position:fixed;top:68px;left:50%;transform:translateX(-50%);background:var(--green);color:#000;padding:10px 22px;border-radius:10px;font-weight:700;font-size:13px;z-index:999;display:none;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+.alert.error{background:var(--red);color:#fff}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:32px 16px;color:var(--muted)}
+.empty-i{font-size:32px;margin-bottom:8px}
+.empty-t{font-size:13px}
+
+@media(max-width:380px){.form-row{grid-template-columns:1fr}.stats-grid{gap:8px}}
+</style>
+</head>
+<body>
+
+<!-- ── SETUP SCREEN ── -->
+<div id="setup" style="display:none">
+  <div class="setup-box">
+    <div class="setup-logo">🏋️ EURO HEALTH</div>
+    <div class="setup-sub">Firebase Firestore 연동 설정 (최초 1회)</div>
+    <div class="setup-step">
+      <div class="ss-n">STEP 1</div>
+      <div class="ss-t"><a href="https://console.firebase.google.com" target="_blank">Firebase Console</a>에서 프로젝트 생성 → Firestore Database 활성화 (테스트 모드)</div>
+    </div>
+    <div class="setup-step">
+      <div class="ss-n">STEP 2</div>
+      <div class="ss-t">프로젝트 설정(⚙) → 내 앱 → 웹 앱(<code>&lt;/&gt;</code>) 추가 → <code>firebaseConfig</code> 복사</div>
+    </div>
+    <div class="form-group" style="margin-top:14px">
+      <label class="form-label">학원/헬스장 이름</label>
+      <input class="form-input" id="s-gym" placeholder="예: 강남 GYM PRO">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Firebase Config (JSON)</label>
+      <textarea class="cfg-ta" id="s-cfg" placeholder='{
+  "apiKey": "AIza...",
+  "authDomain": "your-project.firebaseapp.com",
+  "projectId": "your-project",
+  "storageBucket": "your-project.appspot.com",
+  "messagingSenderId": "...",
+  "appId": "..."
+}'></textarea>
+      <div class="setup-err" id="s-err"></div>
+    </div>
+    <button class="btn btn-p btn-w" onclick="saveSetup()" style="margin-top:4px">저장하고 시작하기</button>
+  </div>
+</div>
+
+<!-- ── HEADER ── -->
+<header>
+  <div class="logo">EURO<span>HEALTH</span> <span id="gym-name-hdr" style="font-size:12px;color:var(--muted);font-weight:400"></span></div>
+  <div class="hdr-right">
+    <span class="hdr-time" id="headerTime"></span>
+    <span id="fb-indicator"><span class="fb-dot" id="fbDot"></span></span>
+    <button class="admin-badge locked" id="adminBadge" onclick="handleAdminBadge()">🔒 관리자</button>
+    <button class="btn-setting" onclick="requireAdmin(openSett)">⚙</button>
+  </div>
+</header>
+
+<!-- ── TABS ── -->
+<div class="tabs">
+  <div class="tab active" onclick="showPage('face',this)">🎭 얼굴인식</div>
+  <div class="tab" onclick="showPage('checkin',this)">🏃 출입체크</div>
+  <div class="tab" onclick="showPage('members',this)">👥 회원목록</div>
+  <div class="tab" id="tab-register" onclick="requireAdmin(()=>showPage('register',this))">➕ 회원등록</div>
+  <div class="tab" id="tab-inquiries" onclick="requireAdmin(()=>showPage('inquiries',this))">📩 상담문의<span id="inqBadge" style="display:none;background:var(--red);color:#fff;border-radius:10px;font-size:10px;padding:1px 6px;margin-left:4px"></span></div>
+  <div class="tab" onclick="showPage('stats',this)">📊 현황</div>
+  <div class="tab" id="tab-trainer" onclick="requireAdmin(()=>showPage('trainer',this))">👨‍💼 트레이너</div>
+  <div class="tab" id="tab-data" onclick="requireAdmin(()=>showPage('data',this))">💾 데이터</div>
+</div>
+
+<!-- ── PAGE: 얼굴인식 ── -->
+<div class="page active" id="page-face">
+  <div id="modelProgress" class="face-model-progress">
+    <div class="fmp-title">🧠 얼굴인식 모델 로딩 중...</div>
+    <div class="fmp-step" id="mp1"><span class="dot"></span> SSD MobileNet (얼굴 감지)</div>
+    <div class="fmp-step" id="mp2"><span class="dot"></span> Face Landmarks (특징점)</div>
+    <div class="fmp-step" id="mp3"><span class="dot"></span> Face Recognition (인식)</div>
+  </div>
+
+  <div class="face-wrap" id="faceWrap">
+    <video id="faceVideo" autoplay playsinline muted></video>
+    <canvas id="faceCanvas"></canvas>
+    <div class="face-status-bar loading" id="faceStatus">모델 로딩 중...</div>
+  </div>
+
+  <div class="face-controls">
+    <button class="btn btn-s" style="flex:1" onclick="flipCamera()">🔄 카메라 전환</button>
+    <button class="btn btn-s" style="flex:1" id="btnToggleFace" onclick="toggleFaceRecog()">⏸ 일시정지</button>
+  </div>
+
+  <div class="section-title">오늘 출입 현황</div>
+  <div id="faceCheckinList"></div>
+</div>
+
+<!-- ── PAGE: 출입체크 (수동) ── -->
+<div class="page" id="page-checkin">
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:14px">
+    <div class="section-title">수동 출입 확인</div>
+    <input class="form-input" id="checkinInput" placeholder="회원번호 입력 (예: M001)" style="margin-bottom:9px">
+    <button class="btn btn-p btn-w" onclick="doCheckin()">✅ 출입 확인</button>
+  </div>
+  <div class="section-title">오늘 출입 기록</div>
+  <div id="checkinList"></div>
+</div>
+
+<!-- ── PAGE: 회원목록 ── -->
+<div class="page" id="page-members">
+  <input class="search-input" placeholder="🔍 이름·회원번호·전화번호 끝 4자리 검색..." oninput="filterMembers(this.value)">
+  <div id="memberList"></div>
+</div>
+
+<!-- ── PAGE: 회원등록 ── -->
+<div class="page" id="page-register">
+  <div class="form-row">
+    <div class="form-group"><label class="form-label">이름</label><input class="form-input" id="regName" placeholder="홍길동"></div>
+    <div class="form-group"><label class="form-label">연락처</label><input class="form-input" id="regPhone" placeholder="010-0000-0000" type="tel"></div>
+  </div>
+  <div class="form-group">
+    <label class="form-label">성별</label>
+    <select class="form-select" id="regGender"><option value="남">남성</option><option value="여">여성</option></select>
+  </div>
+  <div class="form-group">
+    <label class="form-label">이용권</label>
+    <div class="ticket-grid">
+      <div class="ticket-option selected" onclick="selTicket(this,'1개월',50000,30)"><div class="ticket-name">1개월권</div><div class="ticket-price">50,000원</div><div class="ticket-period">30일</div></div>
+      <div class="ticket-option" onclick="selTicket(this,'3개월',130000,90)"><div class="ticket-name">3개월권</div><div class="ticket-price">130,000원</div><div class="ticket-period">90일</div></div>
+      <div class="ticket-option" onclick="selTicket(this,'6개월',230000,180)"><div class="ticket-name">6개월권</div><div class="ticket-price">230,000원</div><div class="ticket-period">180일</div></div>
+      <div class="ticket-option" onclick="selTicket(this,'1년',400000,365)"><div class="ticket-name">1년권</div><div class="ticket-price">400,000원</div><div class="ticket-period">365일</div></div>
+    </div>
+  </div>
+
+  <!-- 얼굴 등록 섹션 -->
+  <div class="face-reg-box">
+    <div class="section-title" style="margin-bottom:8px">👤 얼굴 등록 (선택)</div>
+    <div class="face-reg-status none" id="regFaceStatus">얼굴 미등록 — 등록 시 얼굴인식 출입 가능</div>
+    <div style="display:flex;align-items:center;margin-bottom:10px">
+      <img id="regFaceImg" class="face-reg-photo">
+      <div class="face-reg-preview" id="regFacePreviewBox" style="display:none;flex:1">
+        <video id="regFaceVideo" autoplay playsinline muted style="width:100%;border-radius:8px"></video>
+        <canvas id="regFaceCanvas" style="display:none"></canvas>
+      </div>
+    </div>
+    <div class="face-reg-btns">
+      <button class="btn btn-s btn-sm" onclick="startRegCam()">📷 카메라 촬영</button>
+      <button class="btn btn-s btn-sm" id="btnCaptureFace" onclick="captureFaceReg()" style="display:none">📸 촬영</button>
+      <label class="btn btn-s btn-sm" style="cursor:pointer">📁 파일 업로드<input type="file" accept="image/*" style="display:none" onchange="uploadFaceReg(this)"></label>
+      <button class="btn btn-d btn-sm" onclick="clearFaceReg()" id="btnClearFace" style="display:none">✕ 초기화</button>
+    </div>
+  </div>
+
+  <button class="submit-btn" onclick="registerMember()">💳 결제 및 등록</button>
+</div>
+
+<!-- ── PAGE: 상담문의 (웹사이트 연동) ── -->
+<div class="page" id="page-inquiries">
+  <div class="section-title">홈페이지 상담 신청 (미처리 우선)</div>
+  <div id="inquiryList"></div>
+</div>
+
+<!-- ── PAGE: 현황 ── -->
+<div class="page" id="page-stats">
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-num" id="stTotal">0</div><div class="stat-label">전체 회원</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--green)" id="stActive">0</div><div class="stat-label">이용중</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--primary)" id="stToday">0</div><div class="stat-label">오늘 방문</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--red)" id="stExpired">0</div><div class="stat-label">만료 임박</div></div>
+  </div>
+  <div class="section-title">포인트 현황</div>
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:13px;margin-bottom:14px">
+    <div class="data-info-row"><span>전체 누적 포인트</span><span id="stTotalPoints" style="color:var(--gold);font-weight:700">0P</span></div>
+  </div>
+  <div class="section-title">얼굴 등록 현황</div>
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:13px;margin-bottom:14px">
+    <div class="data-info-row"><span>얼굴 등록 회원</span><span id="stFace" style="color:var(--primary);font-weight:700">0명</span></div>
+    <div class="data-info-row"><span>미등록 회원</span><span id="stNoFace" style="color:var(--muted)">0명</span></div>
+  </div>
+  <div class="section-title">월별 방문 현황 (최근 6개월)</div>
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px">
+    <canvas id="visitChart" height="160"></canvas>
+  </div>
+  <div class="section-title">월별 신규 등록 (최근 6개월)</div>
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px">
+    <canvas id="memberChart" height="160"></canvas>
+  </div>
+  <div class="section-title">수입 현황 (이번 달)</div>
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:13px;margin-bottom:14px">
+    <div class="data-info-row"><span>이달 총 수입</span><span id="stMonthRevenue" style="color:var(--green);font-weight:700">0원</span></div>
+    <div class="data-info-row"><span>신규 등록</span><span id="stMonthNew" style="color:var(--primary);font-weight:700">0건 · 0원</span></div>
+    <div class="data-info-row"><span>갱신</span><span id="stMonthRenew" style="color:var(--purple);font-weight:700">0건 · 0원</span></div>
+  </div>
+  <div class="section-title">월별 수입 (최근 6개월)</div>
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px">
+    <canvas id="revenueChart" height="160"></canvas>
+  </div>
+  <div class="section-title">만료 임박 (7일 이내)</div>
+  <div id="expiringList"></div>
+</div>
+
+<!-- ── PAGE: 트레이너 관리 ── -->
+<div class="page" id="page-trainer">
+  <div class="section-title">트레이너 등록</div>
+  <div class="card" style="margin-bottom:16px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label class="form-label">이름 *</label>
+        <input class="form-input" id="tn-name" placeholder="홍길동">
+      </div>
+      <div>
+        <label class="form-label">전화번호</label>
+        <input class="form-input" id="tn-phone" placeholder="010-0000-0000">
+      </div>
+    </div>
+    <div style="margin-bottom:10px">
+      <label class="form-label">전문 분야</label>
+      <select class="form-input" id="tn-specialty">
+        <option value="헬스">헬스</option>
+        <option value="PT">PT</option>
+        <option value="필라테스">필라테스</option>
+        <option value="요가">요가</option>
+        <option value="수영">수영</option>
+        <option value="복싱">복싱</option>
+      </select>
+    </div>
+    <!-- 얼굴 등록 -->
+    <div style="margin-bottom:10px">
+      <label class="form-label">얼굴 등록</label>
+      <div style="display:flex;gap:10px;align-items:center">
+        <video id="tnCamVideo" width="120" height="90" autoplay muted playsinline style="border-radius:10px;border:1px solid var(--border);background:#000;display:none"></video>
+        <canvas id="tnCamCanvas" width="120" height="90" style="display:none"></canvas>
+        <div>
+          <button class="btn btn-sm" id="btnTnCam" onclick="startTnCam()" style="margin-bottom:6px;display:block">📷 카메라 켜기</button>
+          <button class="btn btn-sm" id="btnTnCapture" onclick="captureTnFace()" style="display:none;margin-bottom:6px">📸 얼굴 캡처</button>
+          <div id="tnFaceStatus" style="font-size:12px;color:var(--muted)">미등록</div>
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="registerTrainer()" style="width:100%">등록하기</button>
+  </div>
+
+  <div class="section-title" style="margin-top:24px">트레이너 목록</div>
+  <div id="trainerList"></div>
+
+  <!-- 오늘 PT 일정 -->
+  <div class="section-title" style="margin-top:28px">📅 오늘 PT 일정</div>
+  <div id="todayPTList" style="margin-bottom:8px"></div>
+
+  <!-- PT 계약 등록 -->
+  <div class="section-title" style="margin-top:28px">PT 계약 등록</div>
+  <div class="card" style="margin-bottom:16px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label class="form-label">트레이너 *</label>
+        <select class="form-input" id="pt-trainer"><option value="">트레이너 선택</option></select>
+      </div>
+      <div>
+        <label class="form-label">회원 *</label>
+        <select class="form-input" id="pt-member"><option value="">회원 선택</option></select>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label class="form-label">총 PT 횟수</label>
+        <input class="form-input" id="pt-total" type="number" placeholder="10" min="1">
+      </div>
+      <div>
+        <label class="form-label">회당 금액 (원)</label>
+        <input class="form-input" id="pt-price" type="number" placeholder="50000" min="0">
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="createPTContract()" style="width:100%">계약 등록</button>
+  </div>
+
+  <!-- PT 진행 현황 -->
+  <div class="section-title" style="margin-top:24px">PT 진행 현황</div>
+  <div style="display:flex;gap:8px;margin-bottom:10px">
+    <button class="btn btn-sm" id="ptFilter-active" onclick="setPTFilter('active')">진행중</button>
+    <button class="btn btn-sm" id="ptFilter-all" onclick="setPTFilter('all')" style="background:transparent;color:var(--muted);border:1px solid var(--border)">전체</button>
+  </div>
+  <div id="ptContractList"></div>
+
+  <!-- 월별 정산 -->
+  <div class="section-title" style="margin-top:28px">월별 정산</div>
+  <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+    <input class="form-input" id="settle-month" type="month" style="max-width:160px">
+    <button class="btn btn-sm btn-primary" onclick="loadSettlement()">조회</button>
+  </div>
+  <div id="settlementTable"></div>
+</div>
+
+<!-- ── 트레이너 체크인 카드 ── -->
+<div class="trainer-card-overlay" id="trainerCardOverlay" onclick="closeTrainerCard(event)">
+  <div class="trainer-card" id="trainerCardBody">
+    <div style="text-align:center;margin-bottom:12px">
+      <img id="tcPhoto" src="" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid var(--green);display:none">
+      <div id="tcAvatar" style="width:80px;height:80px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto;background:rgba(0,150,109,.12)">👨‍💼</div>
+    </div>
+    <div class="trainer-badge" id="tcBadge">출근</div>
+    <div style="font-size:22px;font-weight:900;color:var(--text);text-align:center;margin:4px 0" id="tcName">트레이너</div>
+    <div class="trainer-specialty" id="tcSpecialty">헬스</div>
+    <div class="trainer-status-row">
+      <div class="trainer-stat">
+        <div class="trainer-stat-val" id="tcDays">-</div>
+        <div class="trainer-stat-lbl">오늘 출근</div>
+      </div>
+      <div class="trainer-stat">
+        <div class="trainer-stat-val" id="tcPtCount">-</div>
+        <div class="trainer-stat-lbl">이번달 수업</div>
+      </div>
+    </div>
+    <button class="btn" onclick="closeTrainerCard(null)" style="width:100%;margin-top:8px;background:rgba(0,150,109,.1);color:var(--green);border:1px solid rgba(0,150,109,.3)">확인</button>
+  </div>
+</div>
+
+<!-- ── PAGE: 데이터관리 ── -->
+<div class="page" id="page-data">
+  <div class="data-card">
+    <div class="data-card-title">⬇ 백업 (JSON 다운로드)</div>
+    <div class="data-card-desc">전체 회원 데이터(얼굴 정보 포함)를 JSON 파일로 내보냅니다.</div>
+    <div class="data-info-row" style="margin-bottom:10px"><span>전체 회원</span><span id="backupMemberCount" style="color:var(--primary);font-weight:700">0명</span></div>
+    <button class="btn btn-p btn-w" onclick="exportBackup()">⬇ 회원 데이터 백업</button>
+  </div>
+
+  <div class="data-card">
+    <div class="data-card-title">⬆ 복원 (JSON 불러오기)</div>
+    <div class="data-card-desc">백업 JSON 파일을 불러와 Firestore에 복원합니다. 기존 데이터에 병합됩니다.</div>
+    <label class="btn btn-go btn-w" style="cursor:pointer">📁 백업 파일 선택<input type="file" accept=".json" style="display:none" onchange="importBackup(this)"></label>
+  </div>
+
+  <div class="data-card">
+    <div class="data-card-title">🗑 출입기록 초기화</div>
+    <div class="data-card-desc">오늘 날짜의 출입기록을 삭제합니다. 회원 데이터는 유지됩니다.</div>
+    <button class="btn btn-d btn-w" onclick="clearTodayCheckins()">오늘 출입기록 초기화</button>
+  </div>
+
+  <div class="data-card">
+    <div class="data-card-title">ℹ Firebase 연결 정보</div>
+    <div id="dataFbInfo" style="font-size:12px;color:var(--muted);line-height:1.8"></div>
+  </div>
+</div>
+
+<!-- ── MEMBER INFO CARD (얼굴 인식 결과) ── -->
+<div class="mic-overlay" id="micOverlay" onclick="dismissMic()">
+  <div class="mic-card" onclick="event.stopPropagation()">
+    <button class="mic-dismiss" onclick="dismissMic()">✕</button>
+    <div class="mic-photo" id="micPhoto">😊</div>
+    <div class="mic-name" id="micName">—</div>
+    <div class="mic-id" id="micId">—</div>
+    <div class="mic-checkin-type" id="micType">—</div>
+    <div class="mic-badge active" id="micBadge">이용 중</div>
+    <div class="mic-points-row">
+      <div>
+        <div class="mic-points-num" id="micPoints">0</div>
+        <div class="mic-points-lbl">누적 포인트</div>
+      </div>
+      <div id="micPointsNew" style="display:none" class="mic-points-new">+1P 적립!</div>
+    </div>
+    <div class="mic-row">
+      <div class="mic-cell"><div class="mic-cell-val" id="micDays">—</div><div class="mic-cell-lbl">남은 일수</div></div>
+      <div class="mic-cell"><div class="mic-cell-val" id="micTicket" style="font-size:14px">—</div><div class="mic-cell-lbl">이용권</div></div>
+      <div class="mic-cell"><div class="mic-cell-val" id="micExpiry" style="font-size:13px">—</div><div class="mic-cell-lbl">만료일</div></div>
+    </div>
+    <div class="mic-timer"><div class="mic-timer-bar" id="micTimerBar" style="width:100%"></div></div>
+  </div>
+</div>
+
+<!-- ── ADMIN PASSWORD MODAL ── -->
+<div class="pw-overlay" id="pwOverlay">
+  <div class="pw-box">
+    <div class="pw-icon">🔐</div>
+    <div class="pw-title" id="pwTitle">관리자 인증</div>
+    <div class="pw-sub" id="pwSub">관리자 비밀번호를 입력하세요</div>
+    <input class="pw-input" id="pwInput" type="password" inputmode="numeric" maxlength="10" placeholder="••••" onkeydown="if(event.key==='Enter')submitPw()">
+    <div class="pw-error" id="pwError"></div>
+    <div class="pw-numpad">
+      <button class="pw-key" onclick="pwKey('1')">1</button>
+      <button class="pw-key" onclick="pwKey('2')">2</button>
+      <button class="pw-key" onclick="pwKey('3')">3</button>
+      <button class="pw-key" onclick="pwKey('4')">4</button>
+      <button class="pw-key" onclick="pwKey('5')">5</button>
+      <button class="pw-key" onclick="pwKey('6')">6</button>
+      <button class="pw-key" onclick="pwKey('7')">7</button>
+      <button class="pw-key" onclick="pwKey('8')">8</button>
+      <button class="pw-key" onclick="pwKey('9')">9</button>
+      <button class="pw-key del" onclick="pwDel()">⌫</button>
+      <button class="pw-key" onclick="pwKey('0')">0</button>
+      <button class="pw-key ok" onclick="submitPw()">확인 ✓</button>
+    </div>
+    <button class="pw-cancel" onclick="closePwModal()">취소</button>
+  </div>
+</div>
+
+<!-- ── SETTINGS MODAL ── -->
+<div class="sett-overlay" id="settOverlay">
+  <div class="sett-modal">
+    <h3>⚙ 설정</h3>
+    <div id="settFbStatus" class="fb-status off"><span class="fb-dot" id="settFbDot"></span><span id="settFbTxt">Firebase 연결 안됨</span></div>
+    <div class="sett-sec">
+      <div class="sett-sec-ttl">헬스장 정보</div>
+      <div class="form-group"><label class="form-label">이름</label><input class="form-input" id="stGym" placeholder="GYM PRO"></div>
+    </div>
+    <div class="sett-sec">
+      <div class="sett-sec-ttl">관리자 비밀번호 변경</div>
+      <div class="form-group"><label class="form-label">현재 비밀번호</label><input class="form-input" id="stPwCur" type="password" placeholder="현재 비밀번호"></div>
+      <div class="form-group"><label class="form-label">새 비밀번호</label><input class="form-input" id="stPwNew" type="password" placeholder="새 비밀번호 (숫자 권장)"></div>
+      <div class="form-group"><label class="form-label">새 비밀번호 확인</label><input class="form-input" id="stPwConf" type="password" placeholder="한 번 더 입력"></div>
+      <button class="btn btn-go btn-w" onclick="changePw()">비밀번호 변경</button>
+    </div>
+    <button class="btn btn-p btn-w" onclick="saveSett()" style="margin-bottom:8px">저장</button>
+    <button class="btn btn-s btn-w" onclick="closeSett()">닫기</button>
+  </div>
+</div>
+
+<!-- ── REWARDS MODAL ── -->
+<div class="modal-overlay" id="rewardsModal">
+  <div class="modal">
+    <h3>🎁 포인트 혜택 교환</h3>
+    <div id="rewardsMemberInfo" style="margin-bottom:14px"></div>
+    <div id="rewardsList"></div>
+    <button class="cancel-btn" style="margin-top:8px" onclick="closeRewardsModal()">닫기</button>
+  </div>
+</div>
+
+<!-- ── MEMO MODAL ── -->
+<div class="modal-overlay" id="memoModal">
+  <div class="modal">
+    <h3>📝 회원 메모</h3>
+    <div id="memoMemberName" style="font-size:13px;color:var(--muted);margin-bottom:8px"></div>
+    <div id="memoHistory" style="max-height:120px;overflow-y:auto;margin-bottom:10px;padding:8px;background:var(--bg);border-radius:8px;border:1px solid var(--border)"></div>
+    <textarea id="memoText" class="cfg-ta" placeholder="새 메모 추가 (날짜별로 누적 저장됩니다)..." style="min-height:80px;font-family:inherit;font-size:14px"></textarea>
+    <button class="pay-btn" style="margin-top:10px" onclick="saveMemo()">💾 추가</button>
+    <button class="cancel-btn" onclick="closeMemoModal()">닫기</button>
+  </div>
+</div>
+
+<!-- ── PT SCHEDULE MODAL ── -->
+<div class="modal-overlay" id="ptSchedModal">
+  <div class="modal">
+    <h3>📅 PT 수업 예약</h3>
+    <div id="ptSchedInfo" style="font-size:13px;color:var(--muted);margin-bottom:12px"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div><label class="form-label">날짜</label><input class="form-input" id="ptSchedDate" type="date"></div>
+      <div><label class="form-label">시간</label><input class="form-input" id="ptSchedTime" type="time" value="10:00"></div>
+    </div>
+    <button class="pay-btn" onclick="savePTSchedule()">💾 예약 저장</button>
+    <button class="cancel-btn" onclick="document.getElementById('ptSchedModal').classList.remove('visible')">취소</button>
+  </div>
+</div>
+
+<!-- ── LOCKER MODAL ── -->
+<div class="modal-overlay" id="lockerModal">
+  <div class="modal">
+    <h3>🔐 락커 번호 관리</h3>
+    <div id="lockerMemberName" style="font-size:13px;color:var(--muted);margin-bottom:12px"></div>
+    <input class="form-input" id="lockerNum" placeholder="락커 번호 입력 (예: A-12)" style="margin-bottom:10px">
+    <div id="lockerListPreview" style="font-size:12px;color:var(--muted);margin-bottom:10px"></div>
+    <button class="pay-btn" style="margin-top:4px" onclick="saveLocker()">💾 저장</button>
+    <button class="cancel-btn" onclick="closeLockerModal()">취소</button>
+  </div>
+</div>
+
+<!-- ── RENEWAL MODAL ── -->
+<div class="modal-overlay" id="renewModal">
+  <div class="modal">
+    <h3>🔄 회원권 갱신</h3>
+    <div id="renewMemberInfo" style="margin-bottom:14px"></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase">갱신 이용권 선택</div>
+    <div class="ticket-grid" style="margin-bottom:14px">
+      <div class="ticket-option renew-ticket selected" onclick="selRenewTicket(this,'1개월',50000,30)"><div class="ticket-name">1개월권</div><div class="ticket-price">50,000원</div><div class="ticket-period">30일 연장</div></div>
+      <div class="ticket-option renew-ticket" onclick="selRenewTicket(this,'3개월',130000,90)"><div class="ticket-name">3개월권</div><div class="ticket-price">130,000원</div><div class="ticket-period">90일 연장</div></div>
+      <div class="ticket-option renew-ticket" onclick="selRenewTicket(this,'6개월',230000,180)"><div class="ticket-name">6개월권</div><div class="ticket-price">230,000원</div><div class="ticket-period">180일 연장</div></div>
+      <div class="ticket-option renew-ticket" onclick="selRenewTicket(this,'1년',400000,365)"><div class="ticket-name">1년권</div><div class="ticket-price">400,000원</div><div class="ticket-period">365일 연장</div></div>
+    </div>
+    <div id="renewSummary" style="margin-bottom:14px"></div>
+    <button class="pay-btn" onclick="processRenewal()">✅ 갱신 완료</button>
+    <button class="cancel-btn" onclick="closeRenewModal()">취소</button>
+  </div>
+</div>
+
+<!-- ── PAYMENT MODAL ── -->
+<div class="modal-overlay" id="payModal">
+  <div class="modal">
+    <h3>💳 결제 확인</h3>
+    <div id="payDetail"></div>
+    <button class="pay-btn" onclick="processPayment()">카드 결제 완료</button>
+    <button class="cancel-btn" onclick="closePayModal()">취소</button>
+  </div>
+</div>
+
+<div class="alert" id="alertMsg"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// ══════════════════════════════════════════════
+//  ADMIN AUTH
+// ══════════════════════════════════════════════
+let adminAuth = false;      // 세션 인증 여부
+let pwCallback = null;      // 인증 후 실행할 콜백
+
+function requireAdmin(cb){
+  if(adminAuth){ cb(); return; }
+  pwCallback = cb;
+  document.getElementById('pwTitle').textContent = '관리자 인증';
+  document.getElementById('pwSub').textContent = '관리자 비밀번호를 입력하세요';
+  document.getElementById('pwError').textContent = '';
+  document.getElementById('pwInput').value = '';
+  document.getElementById('pwOverlay').classList.add('visible');
+  setTimeout(()=>document.getElementById('pwInput').focus(), 100);
+}
+
+function pwKey(v){
+  const el = document.getElementById('pwInput');
+  if(el.value.length < 10) el.value += v;
+}
+function pwDel(){
+  const el = document.getElementById('pwInput');
+  el.value = el.value.slice(0,-1);
+}
+
+function submitPw(){
+  const val = document.getElementById('pwInput').value;
+  const stored = cfg.adminPw || '0000';
+  if(val === stored){
+    adminAuth = true;
+    closePwModal();
+    updAdminBadge();
+    if(pwCallback){ pwCallback(); pwCallback = null; }
+  } else {
+    document.getElementById('pwError').textContent = '비밀번호가 올바르지 않습니다';
+    document.getElementById('pwInput').value = '';
+    document.getElementById('pwInput').focus();
+    // 흔들기 애니메이션
+    const box = document.querySelector('.pw-box');
+    box.style.animation='none'; box.offsetHeight;
+    box.style.animation='shake .35s ease';
+  }
+}
+
+function closePwModal(){
+  document.getElementById('pwOverlay').classList.remove('visible');
+  pwCallback = null;
+}
+
+function handleAdminBadge(){
+  if(adminAuth){ adminLock(); }
+  else { requireAdmin(()=>{}); }
+}
+
+function adminLock(){
+  adminAuth = false;
+  updAdminBadge();
+  // 보호 탭에 있으면 대시보드로 복귀
+  const active = document.querySelector('.page.active');
+  if(active && (active.id==='page-register'||active.id==='page-data'||active.id==='page-trainer')){
+    showPage('face', document.querySelector('.tab'));
+  }
+  showAlert('관리자 모드 잠금됨 🔒');
+}
+
+function updAdminBadge(){
+  const b = document.getElementById('adminBadge');
+  if(!b) return;
+  if(adminAuth){
+    b.textContent = '🔓 관리자';
+    b.className = 'admin-badge unlocked';
+    b.title = '클릭하면 잠금';
+  } else {
+    b.textContent = '🔒 관리자';
+    b.className = 'admin-badge locked';
+    b.title = '관리자 인증 필요';
+  }
+}
+
+function changePw(){
+  const cur = document.getElementById('stPwCur').value;
+  const nw  = document.getElementById('stPwNew').value;
+  const cf  = document.getElementById('stPwConf').value;
+  if(cur !== (cfg.adminPw||'0000')){ showAlert('현재 비밀번호가 틀렸습니다',true); return; }
+  if(!nw){ showAlert('새 비밀번호를 입력하세요',true); return; }
+  if(nw !== cf){ showAlert('새 비밀번호가 일치하지 않습니다',true); return; }
+  cfg.adminPw = nw;
+  saveCfg();
+  document.getElementById('stPwCur').value='';
+  document.getElementById('stPwNew').value='';
+  document.getElementById('stPwConf').value='';
+  showAlert('비밀번호가 변경됐습니다 ✅');
+}
+
+// shake keyframe 동적 삽입
+(()=>{const s=document.createElement('style');s.textContent='@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}';document.head.appendChild(s);})();
+
+// ══════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════
+let db = null, fbOk = false;
+let cfg = {};
+let members = [];
+let trainers = [];
+let checkins = []; // today's
+let inquiries = []; // 홈페이지 상담문의
+let faceMatcher = null;
+let trainerMatcher = null;
+let modelsLoaded = false;
+let modelsLoading = false;
+let faceStream = null;
+let regStream = null;
+let detectionRunning = false;
+let detectionPaused = false;
+let detectionTimer = null;
+let cooldownMap = {};        // memberId -> Date.now()
+const COOLDOWN_MS = 20000;   // 20 seconds
+let unknownCooldown = 0;     // 미등록 얼굴 음성 중복 방지 (5초)
+const MATCH_THRESHOLD = 0.52;
+let pendingFaceDesc = null;  // registration pending descriptor
+let pendingFacePhoto = null; // registration pending photo (base64)
+let pendingMember = null;
+let selectedTicket = {name:'1개월',price:50000,days:30};
+let memberCounter = 1;
+let unsubMembers = null, unsubCheckins = null, unsubTrainers = null, unsubPTContracts = null, unsubInquiries = null;
+let ptContracts = [];
+let ptFilter = 'active';
+let tnStream = null, tnFaceDescriptor = null, tnPhotoData = null;
+let trainerCardTimer = null;
+let faceMode = 'environment'; // camera facing mode
+let micTimer = null;
+
+const TODAY = (()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;})();
+const MODEL_URL = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@0.22.2/weights';
+
+// ══════════════════════════════════════════════
+//  CONFIG
+// ══════════════════════════════════════════════
+function loadCfg(){try{cfg=JSON.parse(localStorage.getItem('gymp_cfg')||'{}');}catch(e){cfg={};}}
+function saveCfg(){localStorage.setItem('gymp_cfg',JSON.stringify(cfg));}
+loadCfg();
+
+// ══════════════════════════════════════════════
+//  FIREBASE
+// ══════════════════════════════════════════════
+function initFb(fc){
+  try{
+    if(!firebase.apps.length) firebase.initializeApp(fc);
+    db = firebase.firestore();
+    fbOk = true;
+    updFbUI();
+    subAll();
+    return true;
+  }catch(e){
+    console.error('Firebase:',e);
+    fbOk = false; updFbUI();
+    return false;
+  }
+}
+
+function updFbUI(){
+  const dot = document.getElementById('fbDot');
+  if(dot) dot.className = fbOk ? 'fb-dot ok' : 'fb-dot';
+  const sd = document.getElementById('settFbDot');
+  const st = document.getElementById('settFbTxt');
+  const sb = document.getElementById('settFbStatus');
+  if(sd){ sd.className = fbOk ? 'fb-dot ok' : 'fb-dot'; }
+  if(st) st.textContent = fbOk ? 'Firebase 연결됨' : 'Firebase 연결 안됨';
+  if(sb) sb.className = fbOk ? 'fb-status on' : 'fb-status off';
+  if(document.getElementById('dataFbInfo') && cfg.fb){
+    document.getElementById('dataFbInfo').innerHTML =
+      `프로젝트: ${cfg.fb.projectId||'-'}<br>컬렉션: gym_members, gym_checkins<br>상태: ${fbOk?'✅ 연결됨':'❌ 연결 안됨'}`;
+  }
+}
+
+function subAll(){
+  if(!db) return;
+  if(unsubMembers) unsubMembers();
+  unsubMembers = db.collection('gym_members').orderBy('createdAt','desc').onSnapshot(snap=>{
+    members = [];
+    snap.forEach(d=>members.push({id:d.id,...d.data()}));
+    memberCounter = members.length + 1;
+    buildFaceMatcher();
+    renderMemberList();
+    renderMicFaceCheckins();
+    updateDataPage();
+    renderStats();
+  }, e=>console.error('members:',e));
+
+  if(unsubCheckins) unsubCheckins();
+  unsubCheckins = db.collection('gym_checkins').where('date','==',TODAY)
+    .orderBy('ts','desc').onSnapshot(snap=>{
+      checkins = [];
+      snap.forEach(d=>checkins.push({id:d.id,...d.data()}));
+      renderCheckinList();
+      renderMicFaceCheckins();
+      renderStats();
+    }, e=>console.error('checkins:',e));
+
+  if(unsubTrainers) unsubTrainers();
+  unsubTrainers = db.collection('gym_trainers').orderBy('createdAt','desc').onSnapshot(snap=>{
+    trainers = [];
+    snap.forEach(d=>trainers.push({id:d.id,...d.data()}));
+    buildTrainerMatcher();
+    renderTrainerList();
+    refreshPTSelects();
+  }, e=>console.error('trainers:',e));
+
+  if(unsubPTContracts) unsubPTContracts();
+  unsubPTContracts = db.collection('gym_pt_contracts').orderBy('createdAt','desc').onSnapshot(snap=>{
+    ptContracts = [];
+    snap.forEach(d=>ptContracts.push({id:d.id,...d.data()}));
+    renderPTContracts();
+  }, e=>console.error('ptContracts:',e));
+
+  if(unsubInquiries) unsubInquiries();
+  unsubInquiries = db.collection('gym_inquiries').orderBy('createdAt','desc').onSnapshot(snap=>{
+    inquiries = [];
+    snap.forEach(d=>inquiries.push({id:d.id,...d.data()}));
+    renderInquiryList();
+  }, e=>console.error('inquiries:',e));
+}
+
+// ══════════════════════════════════════════════
+//  상담문의 (홈페이지 연동)
+// ══════════════════════════════════════════════
+function renderInquiryList(){
+  const el = document.getElementById('inquiryList');
+  if(!el) return;
+  const sorted = [...inquiries].sort((a,b)=>(a.handled===b.handled)?0:(a.handled?1:-1));
+  const unhandledCount = inquiries.filter(i=>!i.handled).length;
+  const badge = document.getElementById('inqBadge');
+  if(badge){
+    if(unhandledCount>0){ badge.textContent = unhandledCount; badge.style.display='inline-block'; }
+    else{ badge.style.display='none'; }
+  }
+  if(!sorted.length){ el.innerHTML='<div class="empty"><div class="empty-i">📩</div><div class="empty-t">문의 없음</div></div>'; return; }
+  el.innerHTML = sorted.map(i=>{
+    const dt = i.createdAt&&i.createdAt.toDate ? i.createdAt.toDate() : new Date();
+    const dtStr = dt.toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    return `
+    <div class="checkin-item" style="align-items:flex-start;flex-direction:column;gap:8px;${i.handled?'opacity:.55':''}">
+      <div style="display:flex;justify-content:space-between;width:100%">
+        <div class="checkin-name">${esc(i.name||'-')} <span style="color:var(--muted);font-weight:400">${esc(i.phone||'')}</span></div>
+        <span class="status-badge ${i.handled?'status-out':'status-active'}">${i.handled?'처리완료':'미처리'}</span>
+      </div>
+      <div class="checkin-detail">${esc(i.type||'기타')} · ${dtStr}</div>
+      ${i.message?`<div style="font-size:12px;color:var(--text);background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px;width:100%">${esc(i.message)}</div>`:''}
+      <div style="display:flex;gap:6px;width:100%">
+        <button class="btn btn-p btn-sm" style="flex:1" onclick="convertInquiryToMember('${i.id}')">➕ 회원등록으로</button>
+        <button class="btn btn-s btn-sm" onclick="toggleInquiryHandled('${i.id}',${!i.handled})">${i.handled?'↩ 미처리로':'✅ 처리완료'}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function toggleInquiryHandled(id, handled){
+  try{ await db.collection('gym_inquiries').doc(id).update({handled}); }
+  catch(e){ showAlert('처리 실패',true); }
+}
+
+function convertInquiryToMember(id){
+  const inq = inquiries.find(i=>i.id===id);
+  if(!inq) return;
+  requireAdmin(()=>{
+    showPage('register', document.getElementById('tab-register'));
+    document.getElementById('regName').value = inq.name||'';
+    document.getElementById('regPhone').value = inq.phone||'';
+    showAlert('문의 정보로 회원등록 폼을 채웠습니다. 이용권 선택 후 등록해주세요.');
+  });
+}
+
+// ══════════════════════════════════════════════
+//  FIREBASE CONFIG (hardcoded)
+// ══════════════════════════════════════════════
+const FB_CONFIG = {
+  apiKey: "AIzaSyAeegIHOoGONYVSG89pE50X74LqbhlgGPs",
+  authDomain: "gym-attendance-452d4.firebaseapp.com",
+  projectId: "gym-attendance-452d4",
+  storageBucket: "gym-attendance-452d4.firebasestorage.app",
+  messagingSenderId: "456640045807",
+  appId: "1:456640045807:web:749af5e61bc55ae93ef11a"
+};
+
+// ══════════════════════════════════════════════
+//  SETTINGS
+// ══════════════════════════════════════════════
+function openSett(){
+  document.getElementById('stGym').value = cfg.gymName||'';
+  document.getElementById('stPwCur').value='';
+  document.getElementById('stPwNew').value='';
+  document.getElementById('stPwConf').value='';
+  updFbUI();
+  document.getElementById('settOverlay').classList.add('visible');
+}
+function closeSett(){ document.getElementById('settOverlay').classList.remove('visible'); }
+function saveSett(){
+  cfg.gymName = document.getElementById('stGym').value.trim()||cfg.gymName||'GYM PRO';
+  saveCfg();
+  document.getElementById('gym-name-hdr').textContent = cfg.gymName;
+  closeSett(); showAlert('설정 저장됨');
+}
+
+// ══════════════════════════════════════════════
+//  FACE-API MODELS
+// ══════════════════════════════════════════════
+async function loadModels(){
+  if(modelsLoaded || modelsLoading) return;
+  modelsLoading = true;
+  setFaceStatus('loading','⏳ 모델 로딩 중...');
+  try{
+    stepModel(1,'active');
+    await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+    stepModel(1,'done'); stepModel(2,'active');
+
+    await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+    stepModel(2,'done'); stepModel(3,'active');
+
+    await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+    stepModel(3,'done');
+
+    modelsLoaded = true;
+    modelsLoading = false;
+    document.getElementById('modelProgress').style.display = 'none';
+    buildFaceMatcher();
+    startFaceCam();
+  }catch(e){
+    modelsLoading = false;
+    setFaceStatus('error','❌ 모델 로드 실패: '+e.message);
+    console.error(e);
+  }
+}
+
+function stepModel(n, state){
+  const el = document.getElementById('mp'+n);
+  if(!el) return;
+  el.className = 'fmp-step ' + state;
+  el.querySelector('.dot').style.background = state==='done' ? 'var(--green)' : state==='active' ? 'var(--primary)' : 'var(--muted)';
+}
+
+// ══════════════════════════════════════════════
+//  FACE MATCHER
+// ══════════════════════════════════════════════
+function buildFaceMatcher(){
+  const withFace = members.filter(m=>m.faceDescriptor && m.faceDescriptor.length===128);
+  if(!withFace.length){ faceMatcher=null; return; }
+  const labeled = withFace.map(m=>
+    new faceapi.LabeledFaceDescriptors(m.id,[new Float32Array(m.faceDescriptor)])
+  );
+  faceMatcher = new faceapi.FaceMatcher(labeled, MATCH_THRESHOLD);
+}
+
+function buildTrainerMatcher(){
+  const withFace = trainers.filter(t=>t.faceDescriptor && t.faceDescriptor.length===128);
+  if(!withFace.length){ trainerMatcher=null; return; }
+  const labeled = withFace.map(t=>
+    new faceapi.LabeledFaceDescriptors('T_'+t.id,[new Float32Array(t.faceDescriptor)])
+  );
+  trainerMatcher = new faceapi.FaceMatcher(labeled, MATCH_THRESHOLD);
+}
+
+// ── TRAINER CHECK-IN ──
+async function handleTrainerMatch(trainer){
+  // in/out 횟수로 방향 결정 (orderBy 불필요, 순서 무관)
+  const todaySnap = await db.collection('gym_trainer_checkins')
+    .where('trainerId','==',trainer.id).where('date','==',TODAY).get();
+  const todayCheckins = todaySnap.docs.map(d=>d.data());
+  const ins  = todayCheckins.filter(c=>c.type==='in').length;
+  const outs = todayCheckins.filter(c=>c.type==='out').length;
+  const type = ins > outs ? 'out' : 'in';
+
+  await db.collection('gym_trainer_checkins').add({
+    trainerId: trainer.id, trainerName: trainer.name,
+    type, date: TODAY, ts: firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  // 이달 수업 횟수 (기존 + 방금 기록)
+  const ym = TODAY.slice(0,7);
+  const ptSnap = await db.collection('gym_trainer_checkins')
+    .where('trainerId','==',trainer.id).where('date','>=',ym+'-01').where('type','==','in').get();
+
+  const todayInCount = ins + (type==='in' ? 1 : 0);
+  const ptTotal = ptSnap.size + (type==='in' ? 1 : 0);
+  showTrainerCard(trainer, type==='in', ptTotal, todayInCount);
+  speak(type==='in' ? `${trainer.name} 트레이너님 출근하셨습니다` : `${trainer.name} 트레이너님 수고하셨습니다`);
+}
+
+function showTrainerCard(trainer, isIn, ptCount, inCount){
+  detectionPaused = true;
+  const photo = document.getElementById('tcPhoto');
+  const avatar = document.getElementById('tcAvatar');
+  if(trainer.photoData){ photo.src=trainer.photoData; photo.style.display='block'; avatar.style.display='none'; }
+  else { photo.style.display='none'; avatar.style.display='flex'; }
+  document.getElementById('tcName').textContent = trainer.name;
+  document.getElementById('tcSpecialty').textContent = trainer.specialty || '';
+  const badge = document.getElementById('tcBadge');
+  badge.textContent = isIn ? '✅ 출근' : '🏠 퇴근';
+  badge.style.background = isIn ? 'rgba(0,150,109,.12)' : 'rgba(220,53,69,.08)';
+  badge.style.color = isIn ? 'var(--green)' : 'var(--red)';
+  badge.style.borderColor = isIn ? 'rgba(0,150,109,.3)' : 'rgba(220,53,69,.2)';
+  document.getElementById('tcDays').textContent = inCount || '-';
+  document.getElementById('tcPtCount').textContent = ptCount || 0;
+  document.getElementById('trainerCardOverlay').classList.add('visible');
+  if(trainerCardTimer) clearTimeout(trainerCardTimer);
+  trainerCardTimer = setTimeout(()=>closeTrainerCard(), 5000);
+}
+
+function closeTrainerCard(e){
+  // overlay 배경 클릭 또는 자동/버튼 닫기 시에만 처리
+  if(e && e.target && e.target !== document.getElementById('trainerCardOverlay')) return;
+  document.getElementById('trainerCardOverlay').classList.remove('visible');
+  detectionPaused = false;
+  if(trainerCardTimer){ clearTimeout(trainerCardTimer); trainerCardTimer=null; }
+}
+
+// ── TRAINER REGISTRATION ──
+
+async function startTnCam(){
+  if(!modelsLoaded){ showAlert('모델 로딩 중입니다. 잠시 후 다시 시도해주세요.',true); return; }
+  try{
+    tnStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:320},height:{ideal:240}}});
+    const vid = document.getElementById('tnCamVideo');
+    vid.srcObject = tnStream;
+    vid.style.display='block';
+    document.getElementById('btnTnCam').style.display='none';
+    document.getElementById('btnTnCapture').style.display='block';
+  }catch(e){ showAlert('카메라 오류: '+e.message, true); }
+}
+
+async function captureTnFace(){
+  const vid = document.getElementById('tnCamVideo');
+  const canvas = document.getElementById('tnCamCanvas');
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(vid,0,0,120,90);
+  const opts = new faceapi.SsdMobilenetv1Options({minConfidence:0.5});
+  const det = await faceapi.detectSingleFace(vid,opts).withFaceLandmarks().withFaceDescriptor();
+  if(!det){ showAlert('얼굴을 감지하지 못했습니다. 다시 시도해주세요.',true); return; }
+  tnFaceDescriptor = Array.from(det.descriptor);
+  tnPhotoData = canvas.toDataURL('image/jpeg',0.7);
+  document.getElementById('tnFaceStatus').textContent = '✅ 얼굴 등록 완료';
+  document.getElementById('tnFaceStatus').style.color = 'var(--green)';
+  if(tnStream){ tnStream.getTracks().forEach(t=>t.stop()); tnStream=null; }
+  vid.style.display='none';
+  document.getElementById('btnTnCapture').style.display='none';
+  document.getElementById('btnTnCam').style.display='block';
+  document.getElementById('btnTnCam').textContent='🔄 다시 찍기';
+}
+
+async function registerTrainer(){
+  if(!adminAuth){ requireAdmin(()=>registerTrainer()); return; }
+  const name = document.getElementById('tn-name').value.trim();
+  const phone = document.getElementById('tn-phone').value.trim();
+  const specialty = document.getElementById('tn-specialty').value;
+  if(!name){ showAlert('이름을 입력해주세요.',true); return; }
+  if(!tnFaceDescriptor){ showAlert('얼굴을 먼저 등록해주세요.',true); return; }
+  try{
+    await db.collection('gym_trainers').add({
+      name, phone, specialty, faceDescriptor: tnFaceDescriptor,
+      photoData: tnPhotoData || null,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showAlert(`${name} 트레이너 등록 완료!`);
+    document.getElementById('tn-name').value='';
+    document.getElementById('tn-phone').value='';
+    document.getElementById('tnFaceStatus').textContent='미등록';
+    document.getElementById('tnFaceStatus').style.color='var(--muted)';
+    document.getElementById('btnTnCam').textContent='📷 카메라 켜기';
+    tnFaceDescriptor=null; tnPhotoData=null;
+  }catch(e){ showAlert('등록 실패: '+e.message,true); }
+}
+
+function renderTrainerList(){
+  const el = document.getElementById('trainerList');
+  if(!el) return;
+  if(!trainers.length){ el.innerHTML='<div style="text-align:center;color:var(--muted);padding:20px">등록된 트레이너가 없습니다</div>'; return; }
+  el.innerHTML = trainers.map(t=>`
+    <div class="member-card" style="border-left:3px solid var(--green)">
+      <div class="member-info" style="flex:1">
+        ${t.photoData ? `<img src="${t.photoData}" class="member-avatar" style="object-fit:cover">` : `<div class="member-avatar" style="background:rgba(0,150,109,.12);font-size:20px;display:flex;align-items:center;justify-content:center">👨‍💼</div>`}
+        <div>
+          <div class="member-name">${t.name}</div>
+          <div class="member-meta">${t.specialty || ''} ${t.phone ? '| '+t.phone : ''}</div>
+          <div class="member-meta" style="color:${t.faceDescriptor?'var(--green)':'var(--red)'}">
+            ${t.faceDescriptor ? '얼굴 등록됨' : '얼굴 미등록'}
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-sm" style="background:rgba(220,53,69,.08);color:var(--red);border:1px solid rgba(220,53,69,.2)" onclick="deleteTrainer('${t.id}')">삭제</button>
+    </div>
+  `).join('');
+}
+
+async function deleteTrainer(id){
+  if(!adminAuth){ requireAdmin(()=>deleteTrainer(id)); return; }
+  const t = trainers.find(x=>x.id===id);
+  const name = t ? t.name : '트레이너';
+  if(!confirm(`${name} 트레이너를 삭제하시겠습니까?`)) return;
+  try{
+    await db.collection('gym_trainers').doc(id).delete();
+    showAlert(`${name} 트레이너 삭제 완료`);
+  }catch(e){ showAlert('삭제 실패: '+e.message,true); }
+}
+
+// ══════════════════════════════════════════════
+//  PT MANAGEMENT
+// ══════════════════════════════════════════════
+function refreshPTSelects(){
+  const ts = document.getElementById('pt-trainer');
+  const ms = document.getElementById('pt-member');
+  if(!ts || !ms) return;
+  const prevT = ts.value, prevM = ms.value;
+  ts.innerHTML = '<option value="">트레이너 선택</option>' +
+    trainers.map(t=>`<option value="${t.id}"${t.id===prevT?' selected':''}>${t.name}${t.specialty?' ('+t.specialty+')':''}</option>`).join('');
+  ms.innerHTML = '<option value="">회원 선택</option>' +
+    members.filter(m=>m.status==='active'||!m.status).map(m=>`<option value="${m.id}"${m.id===prevM?' selected':''}>${m.name}</option>`).join('');
+}
+
+function setPTFilter(f){
+  ptFilter = f;
+  const active = f==='active';
+  const btnA = document.getElementById('ptFilter-active');
+  const btnAll = document.getElementById('ptFilter-all');
+  if(btnA){ btnA.style.background=active?'rgba(3,169,244,.12)':'transparent'; btnA.style.color=active?'var(--primary)':'var(--muted)'; btnA.style.border=active?'1px solid rgba(3,169,244,.3)':'1px solid var(--border)'; }
+  if(btnAll){ btnAll.style.background=!active?'rgba(3,169,244,.12)':'transparent'; btnAll.style.color=!active?'var(--primary)':'var(--muted)'; btnAll.style.border=!active?'1px solid rgba(3,169,244,.3)':'1px solid var(--border)'; }
+  renderPTContracts();
+}
+
+async function createPTContract(){
+  if(!adminAuth){ requireAdmin(()=>createPTContract()); return; }
+  const trainerId = document.getElementById('pt-trainer').value;
+  const memberId  = document.getElementById('pt-member').value;
+  const total = parseInt(document.getElementById('pt-total').value)||0;
+  const price = parseInt(document.getElementById('pt-price').value)||0;
+  if(!trainerId){ showAlert('트레이너를 선택해주세요.',true); return; }
+  if(!memberId){ showAlert('회원을 선택해주세요.',true); return; }
+  if(total < 1){ showAlert('PT 횟수를 입력해주세요.',true); return; }
+  const trainer = trainers.find(t=>t.id===trainerId);
+  const member  = members.find(m=>m.id===memberId);
+  try{
+    await db.collection('gym_pt_contracts').add({
+      trainerId, trainerName: trainer.name,
+      memberId,  memberName:  member.name,
+      totalSessions: total, usedSessions: 0,
+      pricePerSession: price, status: 'active',
+      startDate: TODAY,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showAlert(`${trainer.name} ↔ ${member.name} PT 계약 등록!`);
+    document.getElementById('pt-total').value='';
+    document.getElementById('pt-price').value='';
+  }catch(e){ showAlert('등록 실패: '+e.message,true); }
+}
+
+function renderPTContracts(){
+  const el = document.getElementById('ptContractList');
+  if(!el) return;
+  const list = ptFilter==='active' ? ptContracts.filter(c=>c.status==='active') : ptContracts;
+  if(!list.length){
+    el.innerHTML=`<div style="text-align:center;color:var(--muted);padding:20px">${ptFilter==='active'?'진행 중인':'등록된'} PT 계약이 없습니다</div>`;
+    return;
+  }
+  el.innerHTML = list.map(c=>{
+    const rem = c.totalSessions - c.usedSessions;
+    const pct = c.totalSessions ? Math.round((c.usedSessions/c.totalSessions)*100) : 0;
+    const isActive = c.status==='active';
+    return `
+    <div class="card" style="margin-bottom:10px;border-left:3px solid ${isActive?'var(--primary)':'var(--border)'}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div>
+          <div style="font-weight:700;color:var(--text)">${c.trainerName} <span style="color:var(--muted);font-weight:400;font-size:12px">→</span> ${c.memberName}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">${c.pricePerSession?c.pricePerSession.toLocaleString()+'원/회':'무료'} · ${c.startDate||''}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:20px;font-weight:900;color:${rem>0?'var(--primary)':'var(--muted)'}">${c.usedSessions}<span style="font-size:12px;font-weight:400;color:var(--muted)">/${c.totalSessions}</span></div>
+          <div style="font-size:11px;color:var(--muted)">${isActive&&rem>0?rem+'회 남음':'완료'}</div>
+        </div>
+      </div>
+      <div style="background:var(--border);border-radius:4px;height:5px;margin-bottom:10px">
+        <div style="background:var(--primary);height:5px;border-radius:4px;width:${pct}%;transition:width .3s"></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        ${isActive&&rem>0?`<button class="btn btn-sm btn-primary" style="flex:1" onclick="recordPTSession('${c.id}')">✅ 수업 완료</button>`:''}
+        ${isActive&&rem>0?`<button class="btn btn-sm" style="background:rgba(3,169,244,.08);color:var(--primary);border:1px solid rgba(3,169,244,.3)" onclick="schedulePT('${c.id}')">📅 예약</button>`:''}
+        <button class="btn btn-sm" style="background:rgba(220,53,69,.08);color:var(--red);border:1px solid rgba(220,53,69,.2)" onclick="deletePTContract('${c.id}')">삭제</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function recordPTSession(contractId){
+  if(!adminAuth){ requireAdmin(()=>recordPTSession(contractId)); return; }
+  const c = ptContracts.find(x=>x.id===contractId);
+  if(!c){ showAlert('계약을 찾을 수 없습니다.',true); return; }
+  if(c.usedSessions >= c.totalSessions){ showAlert('잔여 횟수가 없습니다.',true); return; }
+  try{
+    const newUsed = c.usedSessions + 1;
+    const newStatus = newUsed >= c.totalSessions ? 'completed' : 'active';
+    await db.collection('gym_pt_contracts').doc(contractId).update({
+      usedSessions: firebase.firestore.FieldValue.increment(1),
+      status: newStatus
+    });
+    await db.collection('gym_pt_records').add({
+      contractId,
+      trainerId: c.trainerId, trainerName: c.trainerName,
+      memberId: c.memberId,   memberName: c.memberName,
+      pricePerSession: c.pricePerSession||0,
+      date: TODAY, ts: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    const rem = c.totalSessions - newUsed;
+    const msg = newStatus==='completed'
+      ? `${c.memberName} PT ${c.totalSessions}회 모두 완료! 🎉`
+      : `${c.memberName} 수업 완료 ✅ (잔여 ${rem}회)`;
+    showAlert(msg);
+  }catch(e){ showAlert('기록 실패: '+e.message,true); }
+}
+
+async function deletePTContract(id){
+  if(!adminAuth){ requireAdmin(()=>deletePTContract(id)); return; }
+  const c = ptContracts.find(x=>x.id===id);
+  if(!confirm(`${c?c.trainerName+' ↔ '+c.memberName:'이 계약'}을 삭제하시겠습니까?`)) return;
+  try{
+    await db.collection('gym_pt_contracts').doc(id).delete();
+    showAlert('계약 삭제 완료');
+  }catch(e){ showAlert('삭제 실패: '+e.message,true); }
+}
+
+async function loadSettlement(){
+  const ym = document.getElementById('settle-month').value;
+  if(!ym){ showAlert('월을 선택해주세요.',true); return; }
+  const el = document.getElementById('settlementTable');
+  el.innerHTML='<div style="text-align:center;color:var(--muted);padding:12px">조회 중...</div>';
+  try{
+    const snap = await db.collection('gym_pt_records')
+      .where('date','>=',ym+'-01').where('date','<=',ym+'-31').get();
+    const records = snap.docs.map(d=>d.data());
+    if(!records.length){ el.innerHTML='<div style="text-align:center;color:var(--muted);padding:12px">해당 월 수업 기록이 없습니다</div>'; return; }
+    const byTrainer = {};
+    records.forEach(r=>{
+      if(!byTrainer[r.trainerId]) byTrainer[r.trainerId]={name:r.trainerName, sessions:0, total:0};
+      byTrainer[r.trainerId].sessions++;
+      byTrainer[r.trainerId].total += r.pricePerSession||0;
+    });
+    const rows = Object.values(byTrainer).sort((a,b)=>b.total-a.total);
+    const grandTotal    = rows.reduce((s,r)=>s+r.total,0);
+    const totalSessions = rows.reduce((s,r)=>s+r.sessions,0);
+    el.innerHTML=`
+      <div class="card">
+        <div style="font-weight:700;color:var(--text);margin-bottom:12px">${ym} 정산 내역</div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead><tr style="border-bottom:1px solid var(--border)">
+            <th style="padding:6px 4px;text-align:left;color:var(--muted);font-weight:600">트레이너</th>
+            <th style="padding:6px 4px;text-align:center;color:var(--muted);font-weight:600">수업</th>
+            <th style="padding:6px 4px;text-align:right;color:var(--muted);font-weight:600">정산액</th>
+          </tr></thead>
+          <tbody>${rows.map(r=>`
+            <tr style="border-bottom:1px solid rgba(0,0,0,.04)">
+              <td style="padding:8px 4px;font-weight:600">${r.name}</td>
+              <td style="padding:8px 4px;text-align:center;color:var(--primary);font-weight:700">${r.sessions}회</td>
+              <td style="padding:8px 4px;text-align:right;font-weight:700">${r.total.toLocaleString()}원</td>
+            </tr>`).join('')}
+          </tbody>
+          <tfoot><tr style="border-top:2px solid var(--border)">
+            <td style="padding:8px 4px;font-weight:900">합계</td>
+            <td style="padding:8px 4px;text-align:center;font-weight:900;color:var(--primary)">${totalSessions}회</td>
+            <td style="padding:8px 4px;text-align:right;font-weight:900;color:var(--green)">${grandTotal.toLocaleString()}원</td>
+          </tr></tfoot>
+        </table>
+      </div>`;
+  }catch(e){ el.innerHTML=`<div style="text-align:center;color:var(--red);padding:12px">조회 실패: ${e.message}</div>`; }
+}
+
+// ── PT SCHEDULE ──
+let pendingSchedContractId = null;
+function schedulePT(contractId){
+  if(!adminAuth){ requireAdmin(()=>schedulePT(contractId)); return; }
+  const c = ptContracts.find(x=>x.id===contractId);
+  if(!c) return;
+  pendingSchedContractId = contractId;
+  document.getElementById('ptSchedInfo').textContent = `${c.trainerName} → ${c.memberName}`;
+  document.getElementById('ptSchedDate').value = TODAY;
+  document.getElementById('ptSchedModal').classList.add('visible');
+}
+async function savePTSchedule(){
+  if(!pendingSchedContractId||!db) return;
+  const c = ptContracts.find(x=>x.id===pendingSchedContractId);
+  const date = document.getElementById('ptSchedDate').value;
+  const time = document.getElementById('ptSchedTime').value;
+  if(!date){ showAlert('날짜를 선택해주세요.',true); return; }
+  try{
+    await db.collection('gym_pt_schedules').add({
+      contractId: pendingSchedContractId,
+      trainerId: c.trainerId, trainerName: c.trainerName,
+      memberId: c.memberId, memberName: c.memberName,
+      date, time: time||'', status: 'scheduled',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showAlert(`${date} ${time} 예약 완료!`);
+    document.getElementById('ptSchedModal').classList.remove('visible');
+    renderTodayPT();
+  }catch(e){ showAlert('예약 실패: '+e.message,true); }
+}
+async function renderTodayPT(){
+  const el = document.getElementById('todayPTList');
+  if(!el||!db) return;
+  try{
+    const snap = await db.collection('gym_pt_schedules')
+      .where('date','==',TODAY).where('status','==','scheduled').get();
+    const list = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+    if(!list.length){ el.innerHTML='<div style="text-align:center;color:var(--muted);padding:12px;font-size:13px">오늘 예약된 PT 없음</div>'; return; }
+    el.innerHTML = list.map(s=>`
+      <div class="checkin-item" style="border-left:3px solid var(--primary)">
+        <div style="width:36px;height:36px;border-radius:50%;background:rgba(3,169,244,.12);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🏋️</div>
+        <div class="checkin-info">
+          <div class="checkin-name">${s.trainerName} → ${s.memberName}</div>
+          <div class="checkin-detail">${s.time||'시간 미정'}</div>
+        </div>
+        <button class="btn btn-sm" style="background:rgba(0,150,109,.1);color:var(--green);border:1px solid rgba(0,150,109,.3);flex-shrink:0" onclick="completePTSchedule('${s.id}','${s.contractId}')">완료</button>
+      </div>`).join('');
+  }catch(e){ el.innerHTML=''; }
+}
+async function completePTSchedule(schedId, contractId){
+  if(!adminAuth){ requireAdmin(()=>completePTSchedule(schedId,contractId)); return; }
+  try{
+    await db.collection('gym_pt_schedules').doc(schedId).update({status:'completed'});
+    await recordPTSession(contractId);
+    renderTodayPT();
+  }catch(e){ showAlert('완료 처리 실패: '+e.message,true); }
+}
+
+// ══════════════════════════════════════════════
+//  FACE RECOGNITION CAMERA
+// ══════════════════════════════════════════════
+async function startFaceCam(){
+  if(!modelsLoaded){ loadModels(); return; }
+  stopFaceCam();
+  try{
+    faceStream = await navigator.mediaDevices.getUserMedia({
+      video:{ facingMode: faceMode, width:{ideal:640}, height:{ideal:480} }
+    });
+    const vid = document.getElementById('faceVideo');
+    vid.srcObject = faceStream;
+    vid.play();
+    detectionPaused = false;
+    detectionRunning = true;
+    document.getElementById('btnToggleFace').textContent = '⏸ 일시정지';
+    setFaceStatus('detecting','🔍 얼굴 탐색 중...');
+    scheduleDetection();
+  }catch(e){
+    setFaceStatus('error','❌ 카메라 권한 오류');
+    console.error(e);
+  }
+}
+
+function stopFaceCam(){
+  detectionRunning = false;
+  if(detectionTimer){ clearTimeout(detectionTimer); detectionTimer=null; }
+  if(faceStream){ faceStream.getTracks().forEach(t=>t.stop()); faceStream=null; }
+  const vid = document.getElementById('faceVideo');
+  if(vid) vid.srcObject=null;
+}
+
+function scheduleDetection(){
+  if(!detectionRunning) return;
+  detectionTimer = setTimeout(async()=>{
+    if(!detectionPaused) await runDetection();
+    scheduleDetection();
+  }, 600);
+}
+
+async function runDetection(){
+  const vid = document.getElementById('faceVideo');
+  if(!vid || vid.readyState < 2 || !modelsLoaded) return;
+  try{
+    const opts = new faceapi.SsdMobilenetv1Options({minConfidence:0.5});
+    const det = await faceapi.detectSingleFace(vid, opts).withFaceLandmarks().withFaceDescriptor();
+    drawOverlay(det);
+    if(!det){ setFaceStatus('detecting','🔍 얼굴 탐색 중...'); return; }
+
+    // 트레이너 먼저 확인
+    if(trainerMatcher){
+      const tm = trainerMatcher.findBestMatch(det.descriptor);
+      if(tm.label !== 'unknown'){
+        const trainerId = tm.label.replace('T_','');
+        const trainer = trainers.find(t=>t.id===trainerId);
+        if(trainer){
+          const now = Date.now();
+          if(cooldownMap['TR_'+trainerId] && now - cooldownMap['TR_'+trainerId] < COOLDOWN_MS){
+            const rem = Math.ceil((COOLDOWN_MS-(now-cooldownMap['TR_'+trainerId]))/1000);
+            setFaceStatus('cooldown',`⏱ ${trainer.name} 트레이너 쿨다운 ${rem}초`); return;
+          }
+          cooldownMap['TR_'+trainerId] = now;
+          setFaceStatus('match',`👨‍💼 ${trainer.name} 트레이너`);
+          detectionPaused = true;
+          handleTrainerMatch(trainer).catch(e=>{ console.error('trainer:',e); detectionPaused=false; });
+          return;
+        }
+        return; // 매처 히트했지만 로컬 배열 갱신 대기 중 — 회원으로 낙하하지 않음
+      }
+    }
+
+    if(!faceMatcher){
+      console.log('[FACE] faceMatcher=null — 얼굴 등록된 회원 없음');
+      setFaceStatus('detecting','😊 얼굴 감지됨 (등록된 회원 없음)'); return;
+    }
+    const match = faceMatcher.findBestMatch(det.descriptor);
+    console.log('[FACE] 매칭:', match.label, '/ 거리:', match.distance?.toFixed(3), '/ threshold:', MATCH_THRESHOLD);
+    if(match.label === 'unknown'){
+      const now = Date.now();
+      const elapsed = now - unknownCooldown;
+      console.log('[FACE] unknown 감지 — unknownCooldown:', unknownCooldown, '/ 경과ms:', elapsed);
+      if(!unknownCooldown || elapsed > 5000){
+        console.log('[FACE] → speak() 호출');
+        unknownCooldown = now;
+        speak('안면인식에 실패하셨습니다');
+      } else {
+        console.log('[FACE] → 쿨다운 중 skip. 남은:', Math.max(0, 5000 - elapsed), 'ms');
+      }
+      setFaceStatus('detecting','❓ 미등록 얼굴'); return;
+    }
+    const memberId = match.label;
+    const now = Date.now();
+    if(cooldownMap[memberId] && now - cooldownMap[memberId] < COOLDOWN_MS){
+      const rem = Math.ceil((COOLDOWN_MS - (now-cooldownMap[memberId]))/1000);
+      const m = members.find(x=>x.id===memberId);
+      setFaceStatus('cooldown',`⏱ ${m?m.name:memberId} 쿨다운 ${rem}초`);
+    } else {
+      cooldownMap[memberId] = now;
+      const m = members.find(x=>x.id===memberId);
+      if(m){ handleFaceMatch(m); }
+    }
+  }catch(e){ console.error('detect:',e); }
+}
+
+function drawOverlay(det){
+  const vid = document.getElementById('faceVideo');
+  const cvs = document.getElementById('faceCanvas');
+  if(!vid||!cvs) return;
+  const dw = vid.offsetWidth, dh = vid.offsetHeight;
+  cvs.width=dw; cvs.height=dh;
+  const ctx = cvs.getContext('2d');
+  ctx.clearRect(0,0,dw,dh);
+  if(!det) return;
+  const dim = {width:dw, height:dh};
+  faceapi.matchDimensions(cvs, dim);
+  const resized = faceapi.resizeResults(det, dim);
+  const {box} = resized.detection;
+  ctx.strokeStyle='#00d4ff'; ctx.lineWidth=2; ctx.strokeRect(box.x,box.y,box.width,box.height);
+  const cx=box.x+box.width/2, ty=box.y-8;
+  ctx.fillStyle='rgba(0,212,255,.15)';
+  ctx.strokeStyle='#00d4ff'; ctx.lineWidth=1;
+  // corner brackets
+  const s=14;
+  [[box.x,box.y,1,1],[box.x+box.width,box.y,-1,1],[box.x,box.y+box.height,1,-1],[box.x+box.width,box.y+box.height,-1,-1]].forEach(([x,y,sx,sy])=>{
+    ctx.beginPath(); ctx.moveTo(x+sx*s,y); ctx.lineTo(x,y); ctx.lineTo(x,y+sy*s);
+    ctx.strokeStyle='#00ff88'; ctx.lineWidth=3; ctx.stroke();
+  });
+}
+
+async function handleFaceMatch(member){
+  const lastCk = checkins.find(c=>c.memberId===member.id);
+  const type = (!lastCk || lastCk.type==='out') ? 'in' : 'out';
+  const lbl = type==='in'?'입장':'퇴장';
+  setFaceStatus('matched',`✅ ${member.name} ${lbl}!`);
+  const earnedPoint = await recordCheckin(member.id, member.name, type, true);
+  showMicCard(member, type, earnedPoint);
+  speak(`${member.name}회원님 어서오세요`);
+}
+
+function setFaceStatus(cls, txt){
+  const el = document.getElementById('faceStatus');
+  if(!el) return;
+  el.className = 'face-status-bar ' + cls;
+  el.textContent = txt;
+}
+
+function toggleFaceRecog(){
+  detectionPaused = !detectionPaused;
+  document.getElementById('btnToggleFace').textContent = detectionPaused ? '▶ 재개' : '⏸ 일시정지';
+  if(!detectionPaused) setFaceStatus('detecting','🔍 얼굴 탐색 중...');
+  else setFaceStatus('loading','⏸ 일시정지됨');
+}
+
+function flipCamera(){
+  faceMode = faceMode==='environment' ? 'user' : 'environment';
+  startFaceCam();
+}
+
+// ══════════════════════════════════════════════
+//  MEMBER INFO CARD
+// ══════════════════════════════════════════════
+function showMicCard(member, type, earnedPoint=false){
+  clearTimeout(micTimer);
+  const today = new Date();
+  const end = new Date(member.endDate);
+  const days = Math.ceil((end-today)/(1000*60*60*24));
+  const active = days > 0;
+
+  document.getElementById('micName').textContent = member.name;
+  document.getElementById('micId').textContent = `${member.id} · ${member.phone||''}`;
+  document.getElementById('micType').textContent = type==='in' ? '🟢 입장 완료' : '🔵 퇴장 완료';
+  document.getElementById('micTicket').textContent = member.ticket;
+  document.getElementById('micExpiry').textContent = member.endDate;
+
+  const pts = (member.points||0) + (earnedPoint ? 1 : 0);
+  document.getElementById('micPoints').textContent = pts + 'P';
+  const newEl = document.getElementById('micPointsNew');
+  newEl.style.display = earnedPoint ? 'block' : 'none';
+
+  const dEl = document.getElementById('micDays');
+  dEl.textContent = active ? `D-${days}` : '만료';
+  dEl.className = 'mic-cell-val ' + (active?days<=7?'warning':'':'expired');
+
+  const badge = document.getElementById('micBadge');
+  badge.textContent = active ? '이용 중' : '만료됨';
+  badge.className = 'mic-badge ' + (active?'active':'expired');
+
+  const photo = document.getElementById('micPhoto');
+  if(member.photoData){ photo.innerHTML=`<img src="${member.photoData}" style="width:100%;height:100%;object-fit:cover">`; }
+  else { photo.innerHTML = member.avatar||'😊'; photo.style.fontSize='36px'; }
+
+  document.getElementById('micOverlay').classList.add('visible');
+  const bar = document.getElementById('micTimerBar');
+  bar.style.transition='none'; bar.style.width='100%';
+  setTimeout(()=>{ bar.style.transition='width 5s linear'; bar.style.width='0%'; },50);
+  micTimer = setTimeout(dismissMic, 5000);
+}
+
+function dismissMic(){
+  clearTimeout(micTimer);
+  document.getElementById('micOverlay').classList.remove('visible');
+}
+
+// ══════════════════════════════════════════════
+//  CHECK-IN / CHECK-OUT
+// ══════════════════════════════════════════════
+async function recordCheckin(memberId, memberName, type, isFace=false){
+  if(!db){ return false; }
+  let earnedPoint = false;
+  try{
+    await db.collection('gym_checkins').add({
+      memberId, memberName, type, date: TODAY,
+      ts: firebase.firestore.FieldValue.serverTimestamp(),
+      method: isFace ? 'face' : 'manual'
+    });
+    if(type === 'in'){
+      const member = members.find(m => m.id === memberId);
+      const alreadyEarned = member && member.lastPointDate === TODAY;
+      if(!alreadyEarned){
+        await db.collection('gym_members').doc(memberId).update({
+          points: firebase.firestore.FieldValue.increment(1),
+          lastPointDate: TODAY
+        });
+        earnedPoint = true;
+      }
+    }
+  }catch(e){ console.error('checkin:',e); }
+  return earnedPoint;
+}
+
+function doCheckin(){
+  const input = document.getElementById('checkinInput').value.trim().toUpperCase();
+  if(!input){ showAlert('회원번호를 입력하세요',true); return; }
+  const m = members.find(x=>x.id===input);
+  if(!m){ showAlert('등록된 회원이 아닙니다',true); return; }
+  const lastCk = checkins.find(c=>c.memberId===input);
+  const type = (!lastCk||lastCk.type==='out')?'in':'out';
+  recordCheckin(input, m.name, type, false);
+  document.getElementById('checkinInput').value='';
+  showAlert(`${m.name}님 ${type==='in'?'입장':'퇴장'} ✅`);
+}
+
+function renderCheckinList(){
+  const el = document.getElementById('checkinList');
+  if(!checkins.length){ el.innerHTML='<div class="empty"><div class="empty-i">📋</div><div class="empty-t">오늘 출입 기록 없음</div></div>'; return; }
+  el.innerHTML = checkins.map(c=>chkItem(c)).join('');
+}
+
+function renderMicFaceCheckins(){
+  const el = document.getElementById('faceCheckinList');
+  if(!el) return;
+  if(!checkins.length){ el.innerHTML='<div class="empty"><div class="empty-i">📋</div><div class="empty-t">오늘 출입 기록 없음</div></div>'; return; }
+  el.innerHTML = checkins.slice(0,6).map(c=>chkItem(c)).join('');
+}
+
+function chkItem(c){
+  const m = members.find(x=>x.id===c.memberId);
+  const av = m?.photoData ? `<img src="${m.photoData}" style="width:100%;height:100%;object-fit:cover">` : (m?.avatar||'👤');
+  const bg = m?.color||'var(--border)';
+  const tm = c.ts?.toDate ? c.ts.toDate().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}) : '--:--';
+  return `<div class="checkin-item">
+    <div class="member-avatar" style="background:${bg}22;color:${bg}">${av}</div>
+    <div class="checkin-info">
+      <div class="checkin-name">${esc(c.memberName)}</div>
+      <div class="checkin-detail">${c.memberId} · ${c.method==='face'?'얼굴인식':'수동'}</div>
+    </div>
+    <div style="text-align:right">
+      <div class="checkin-time">${tm}</div>
+      <span class="status-badge ${c.type==='in'?'status-in':'status-out'}">${c.type==='in'?'입장':'퇴장'}</span>
+      ${c.method==='face'?'<span class="status-badge status-face" style="display:block;margin-top:2px">🎭 얼굴</span>':''}
+    </div>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════
+//  FACE REGISTRATION
+// ══════════════════════════════════════════════
+async function startRegCam(){
+  if(!modelsLoaded){ showAlert('모델 로딩 중... 잠시 후 다시 시도하세요',true); return; }
+  if(regStream){ regStream.getTracks().forEach(t=>t.stop()); }
+  try{
+    regStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:480}}});
+    const vid = document.getElementById('regFaceVideo');
+    vid.srcObject = regStream;
+    vid.play();
+    document.getElementById('regFacePreviewBox').style.display='block';
+    document.getElementById('btnCaptureFace').style.display='inline-flex';
+  }catch(e){ showAlert('카메라 접근 오류',true); }
+}
+
+async function captureFaceReg(){
+  const vid = document.getElementById('regFaceVideo');
+  const cvs = document.getElementById('regFaceCanvas');
+  cvs.width = vid.videoWidth; cvs.height = vid.videoHeight;
+  cvs.getContext('2d').drawImage(vid,0,0);
+  await processFaceImage(cvs);
+  if(regStream){ regStream.getTracks().forEach(t=>t.stop()); regStream=null; }
+  document.getElementById('regFacePreviewBox').style.display='none';
+  document.getElementById('btnCaptureFace').style.display='none';
+}
+
+async function uploadFaceReg(input){
+  if(!input.files[0]) return;
+  if(!modelsLoaded){ showAlert('모델 로딩 중... 잠시 후 다시 시도하세요',true); return; }
+  const img = new Image();
+  img.onload = async()=>{ await processFaceImage(img); };
+  img.src = URL.createObjectURL(input.files[0]);
+  input.value='';
+}
+
+async function processFaceImage(src){
+  try{
+    const det = await faceapi.detectSingleFace(src,new faceapi.SsdMobilenetv1Options({minConfidence:0.4}))
+      .withFaceLandmarks().withFaceDescriptor();
+    if(!det){ showAlert('얼굴을 감지하지 못했습니다. 정면을 바라봐 주세요',true); return; }
+    pendingFaceDesc = Array.from(det.descriptor);
+    // Compress photo
+    const thumb = document.createElement('canvas');
+    thumb.width=128; thumb.height=128;
+    const ctx=thumb.getContext('2d');
+    const {box}=det.detection;
+    const pad=30;
+    const sx=Math.max(0,box.x-pad), sy=Math.max(0,box.y-pad);
+    const sw=box.width+pad*2, sh=box.height+pad*2;
+    if(src.naturalWidth){ ctx.drawImage(src,sx,sy,sw,sh,0,0,128,128); }
+    else { ctx.drawImage(src,sx,sy,sw,sh,0,0,128,128); }
+    pendingFacePhoto = thumb.toDataURL('image/jpeg',0.75);
+    document.getElementById('regFaceImg').src=pendingFacePhoto;
+    document.getElementById('regFaceImg').style.display='inline-block';
+    document.getElementById('regFaceStatus').textContent='✅ 얼굴 등록됨';
+    document.getElementById('regFaceStatus').className='face-reg-status ok';
+    document.getElementById('btnClearFace').style.display='inline-flex';
+    showAlert('얼굴 등록 성공! ✅');
+  }catch(e){ showAlert('처리 오류: '+e.message,true); console.error(e); }
+}
+
+function clearFaceReg(){
+  pendingFaceDesc=null; pendingFacePhoto=null;
+  document.getElementById('regFaceImg').style.display='none';
+  document.getElementById('regFaceStatus').textContent='얼굴 미등록 — 등록 시 얼굴인식 출입 가능';
+  document.getElementById('regFaceStatus').className='face-reg-status none';
+  document.getElementById('btnClearFace').style.display='none';
+}
+
+// ══════════════════════════════════════════════
+//  MEMBER CRUD
+// ══════════════════════════════════════════════
+function selTicket(el,name,price,days){
+  document.querySelectorAll('.ticket-option').forEach(t=>t.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedTicket={name,price,days};
+}
+
+function registerMember(){
+  if(!adminAuth){ requireAdmin(registerMember); return; }
+  const name=document.getElementById('regName').value.trim();
+  const phone=document.getElementById('regPhone').value.trim();
+  const gender=document.getElementById('regGender').value;
+  if(!name){ showAlert('이름을 입력하세요',true); return; }
+  if(!phone){ showAlert('연락처를 입력하세요',true); return; }
+  pendingMember={name,phone,gender,ticket:selectedTicket,
+    faceDescriptor:pendingFaceDesc, photoData:pendingFacePhoto};
+  document.getElementById('payDetail').innerHTML=`
+    <div class="payment-item"><span>회원명</span><span>${esc(name)}</span></div>
+    <div class="payment-item"><span>이용권</span><span>${selectedTicket.name}권 (${selectedTicket.days}일)</span></div>
+    <div class="payment-item"><span>얼굴 등록</span><span>${pendingFaceDesc?'✅ 등록됨':'미등록'}</span></div>
+    <div class="payment-total"><span>결제금액</span><span>${selectedTicket.price.toLocaleString()}원</span></div>`;
+  document.getElementById('payModal').classList.add('visible');
+}
+
+async function processPayment(){
+  closePayModal();
+  if(!pendingMember||!db) return;
+  const today=new Date();
+  const end=new Date(today); end.setDate(end.getDate()+pendingMember.ticket.days);
+  const avs=['💪','🏋️','🔥','⚡','🏃','🎯','🦾','🏆'];
+  const cls=['#00d4ff','#ff4466','#00ff88','#ffd700','#ff8800','#aa44ff'];
+  const newId='M'+String(memberCounter).padStart(3,'0');
+
+  try{
+    await db.collection('gym_members').doc(newId).set({
+      id:newId, name:pendingMember.name, phone:pendingMember.phone,
+      gender:pendingMember.gender, ticket:pendingMember.ticket.name+'권',
+      startDate:today.toISOString().split('T')[0],
+      endDate:end.toISOString().split('T')[0],
+      faceDescriptor: pendingMember.faceDescriptor||null,
+      photoData: pendingMember.photoData||null,
+      avatar:avs[Math.floor(Math.random()*avs.length)],
+      color:cls[Math.floor(Math.random()*cls.length)],
+      points: 0,
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    await db.collection('gym_payments').add({
+      memberId:newId, memberName:pendingMember.name,
+      type:'register', ticket:pendingMember.ticket.name,
+      amount:pendingMember.ticket.price,
+      date:TODAY, ts:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    document.getElementById('regName').value='';
+    document.getElementById('regPhone').value='';
+    clearFaceReg();
+    showAlert(`${pendingMember.name}님 등록 완료! 🎉`);
+  }catch(e){ showAlert('등록 실패: '+e.message,true); }
+  pendingMember=null;
+}
+
+function closePayModal(){ document.getElementById('payModal').classList.remove('visible'); }
+
+// ══════════════════════════════════════════════
+//  RENEWAL
+// ══════════════════════════════════════════════
+let selectedRenewTicket = {name:'1개월', price:50000, days:30};
+let pendingRenewId = null, pendingRenewName = null, pendingRenewEndDate = null;
+
+function openRenewal(id, name, endDate){
+  if(!adminAuth){ requireAdmin(()=>openRenewal(id,name,endDate)); return; }
+  pendingRenewId = id; pendingRenewName = name; pendingRenewEndDate = endDate;
+  selectedRenewTicket = {name:'1개월', price:50000, days:30};
+  document.querySelectorAll('.renew-ticket').forEach((t,i)=>t.classList.toggle('selected',i===0));
+  const today = new Date();
+  const end = new Date(endDate);
+  const d = Math.ceil((end-today)/(1000*60*60*24));
+  document.getElementById('renewMemberInfo').innerHTML =
+    `<div class="payment-item"><span>회원명</span><span><b>${esc(name)}</b></span></div>
+     <div class="payment-item"><span>현재 상태</span><span style="color:${d>0?'var(--primary)':'var(--red)'}">${d>0?`D-${d} (${endDate}까지)`:`만료됨 (${endDate})`}</span></div>`;
+  updateRenewSummary();
+  document.getElementById('renewModal').classList.add('visible');
+}
+
+function selRenewTicket(el, name, price, days){
+  document.querySelectorAll('.renew-ticket').forEach(t=>t.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedRenewTicket = {name, price, days};
+  updateRenewSummary();
+}
+
+function updateRenewSummary(){
+  if(!pendingRenewEndDate) return;
+  const today = new Date();
+  const base = new Date(pendingRenewEndDate) > today ? new Date(pendingRenewEndDate) : today;
+  const newEnd = new Date(base);
+  newEnd.setDate(newEnd.getDate() + selectedRenewTicket.days);
+  document.getElementById('renewSummary').innerHTML =
+    `<div class="payment-item"><span>갱신 후 만료일</span><span style="color:var(--primary);font-weight:700">${newEnd.toISOString().split('T')[0]}</span></div>
+     <div class="payment-total"><span>결제금액</span><span>${selectedRenewTicket.price.toLocaleString()}원</span></div>`;
+}
+
+async function processRenewal(){
+  if(!pendingRenewId||!db) return;
+  const today = new Date();
+  const base = new Date(pendingRenewEndDate) > today ? new Date(pendingRenewEndDate) : today;
+  const newEnd = new Date(base);
+  newEnd.setDate(newEnd.getDate() + selectedRenewTicket.days);
+  try{
+    await db.collection('gym_members').doc(pendingRenewId).update({
+      endDate: newEnd.toISOString().split('T')[0],
+      ticket: selectedRenewTicket.name+'권'
+    });
+    await db.collection('gym_payments').add({
+      memberId:pendingRenewId, memberName:pendingRenewName,
+      type:'renew', ticket:selectedRenewTicket.name,
+      amount:selectedRenewTicket.price,
+      date:TODAY, ts:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showAlert(`${pendingRenewName}님 ${selectedRenewTicket.name}권 갱신 완료! ✅`);
+    closeRenewModal();
+  }catch(e){ showAlert('갱신 실패: '+e.message, true); }
+}
+
+function closeRenewModal(){
+  document.getElementById('renewModal').classList.remove('visible');
+  pendingRenewId=null; pendingRenewName=null; pendingRenewEndDate=null;
+}
+
+// ══════════════════════════════════════════════
+//  CHARTS
+// ══════════════════════════════════════════════
+async function renderCharts(){
+  if(!db) return;
+  const now = new Date();
+  const months = [];
+  for(let i=5; i>=0; i--){
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    months.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
+  }
+  const labels = months.map(m=>{ const [y,mo]=m.split('-'); return `${y}.${mo}`; });
+
+  // 방문 데이터 (gym_checkins)
+  const visitsByMonth = Object.fromEntries(months.map(m=>[m,0]));
+  try{
+    const snap = await db.collection('gym_checkins')
+      .where('date','>=', months[0]+'-01')
+      .where('type','==','in').get();
+    snap.forEach(d=>{ const mo=(d.data().date||'').substring(0,7); if(mo in visitsByMonth) visitsByMonth[mo]++; });
+  }catch(e){ console.error('chart visits:',e); }
+
+  // 신규 등록 데이터 (gym_members)
+  const newByMonth = Object.fromEntries(months.map(m=>[m,0]));
+  members.forEach(m=>{
+    if(m.createdAt?.toDate){
+      const d=m.createdAt.toDate();
+      const mo=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+      if(mo in newByMonth) newByMonth[mo]++;
+    }
+  });
+
+  drawBarChart('visitChart','월별 방문',labels,Object.values(visitsByMonth),'#03A9F4');
+  drawBarChart('memberChart','신규 등록',labels,Object.values(newByMonth),'#00966D');
+
+  // 수입 차트 + 이달 현황
+  const revenueByMonth = Object.fromEntries(months.map(m=>[m,0]));
+  let thisMonthNew=0, thisMonthNewAmt=0, thisMonthRenew=0, thisMonthRenewAmt=0;
+  const ym = TODAY.slice(0,7);
+  try{
+    const paySnap = await db.collection('gym_payments')
+      .where('date','>=', months[0]+'-01').get();
+    paySnap.forEach(d=>{
+      const p=d.data(); const mo=(p.date||'').substring(0,7);
+      if(mo in revenueByMonth) revenueByMonth[mo]+=(p.amount||0);
+      if(mo===ym){
+        if(p.type==='register'){ thisMonthNew++; thisMonthNewAmt+=(p.amount||0); }
+        else if(p.type==='renew'){ thisMonthRenew++; thisMonthRenewAmt+=(p.amount||0); }
+      }
+    });
+  }catch(e){ console.error('chart revenue:',e); }
+  const totalRev = thisMonthNewAmt + thisMonthRenewAmt;
+  const rEl = document.getElementById('stMonthRevenue');
+  const nEl = document.getElementById('stMonthNew');
+  const rnEl = document.getElementById('stMonthRenew');
+  if(rEl) rEl.textContent = totalRev.toLocaleString()+'원';
+  if(nEl) nEl.textContent = `${thisMonthNew}건 · ${thisMonthNewAmt.toLocaleString()}원`;
+  if(rnEl) rnEl.textContent = `${thisMonthRenew}건 · ${thisMonthRenewAmt.toLocaleString()}원`;
+  drawBarChart('revenueChart','수입(원)',labels,Object.values(revenueByMonth),'#6D28D9');
+}
+
+function drawBarChart(id, label, labels, data, color){
+  const canvas = document.getElementById(id);
+  if(!canvas) return;
+  const existing = Chart.getChart(canvas);
+  if(existing) existing.destroy();
+  new Chart(canvas,{
+    type:'bar',
+    data:{ labels, datasets:[{
+      label, data,
+      backgroundColor: color+'2a',
+      borderColor: color,
+      borderWidth:2, borderRadius:6
+    }]},
+    options:{
+      responsive:true,
+      plugins:{ legend:{display:false} },
+      scales:{
+        y:{ beginAtZero:true, ticks:{stepSize:1, color:'#7A8FA6'}, grid:{color:'#DDE3EA'} },
+        x:{ ticks:{color:'#7A8FA6'}, grid:{display:false} }
+      }
+    }
+  });
+}
+
+// ══════════════════════════════════════════════
+//  REWARDS
+// ══════════════════════════════════════════════
+const REWARDS = [
+  {emoji:'🥤', name:'스포츠음료',     points:10},
+  {emoji:'🧴', name:'샤워용품 세트', points:20},
+  {emoji:'👕', name:'운동복 대여',   points:15},
+  {emoji:'☕', name:'단백질 쉐이크', points:25},
+  {emoji:'🏊', name:'1일 이용권',    points:30},
+  {emoji:'🎁', name:'1개월 연장',    points:100},
+];
+
+let rewardsMemberId = null, rewardsMemberName = null, rewardsMemberPoints = 0;
+
+function openRewards(id, name, points){
+  if(!adminAuth){ requireAdmin(()=>openRewards(id,name,points)); return; }
+  rewardsMemberId = id; rewardsMemberName = name; rewardsMemberPoints = points;
+  document.getElementById('rewardsMemberInfo').innerHTML =
+    `<div class="payment-item"><span>회원명</span><span><b>${esc(name)}</b></span></div>
+     <div class="payment-item"><span>보유 포인트</span><span style="color:var(--gold);font-weight:900">${points}P</span></div>`;
+  document.getElementById('rewardsList').innerHTML = REWARDS.map(r=>{
+    const canUse = points >= r.points;
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:22px">${r.emoji}</span>
+        <div>
+          <div style="font-size:14px;font-weight:700;${canUse?'':'color:var(--muted)'}">${r.name}</div>
+          <div style="font-size:12px;color:var(--gold)">${r.points}P</div>
+        </div>
+      </div>
+      <button class="btn btn-sm ${canUse?'btn-p':'btn-s'}" ${canUse?`onclick="confirmExchange('${r.name}',${r.points},'${r.emoji}')"`:'disabled'} style="${canUse?'':'opacity:.45;cursor:not-allowed'}">${canUse?'교환':'부족'}</button>
+    </div>`;
+  }).join('');
+  document.getElementById('rewardsModal').classList.add('visible');
+}
+
+async function confirmExchange(name, points, emoji){
+  if(!confirm(`${emoji} ${name} (${points}P)를 교환하시겠습니까?\n현재: ${rewardsMemberPoints}P → 교환 후: ${rewardsMemberPoints-points}P`)) return;
+  try{
+    await db.collection('gym_members').doc(rewardsMemberId).update({
+      points: firebase.firestore.FieldValue.increment(-points)
+    });
+    await db.collection('gym_checkins').add({
+      memberId: rewardsMemberId, memberName: rewardsMemberName,
+      type: 'reward', rewardName: name, pointsUsed: points,
+      date: TODAY, ts: firebase.firestore.FieldValue.serverTimestamp(), method: 'manual'
+    });
+    showAlert(`${emoji} ${name} 교환 완료! -${points}P ✅`);
+    closeRewardsModal();
+  }catch(e){ showAlert('교환 실패: '+e.message, true); }
+}
+
+function closeRewardsModal(){
+  document.getElementById('rewardsModal').classList.remove('visible');
+  rewardsMemberId=null;
+}
+
+// ══════════════════════════════════════════════
+//  MEMO
+// ══════════════════════════════════════════════
+let pendingMemoId = null;
+
+function openMemo(id, name, currentMemo){
+  if(!adminAuth){ requireAdmin(()=>openMemo(id,name,currentMemo)); return; }
+  pendingMemoId = id;
+  document.getElementById('memoMemberName').textContent = name;
+  document.getElementById('memoText').value = '';
+  // 이력 렌더링
+  const member = members.find(m=>m.id===id);
+  const hist = member?.memoHistory || (currentMemo ? [{text:currentMemo, date:'이전'}] : []);
+  const histEl = document.getElementById('memoHistory');
+  if(histEl){
+    histEl.innerHTML = hist.length
+      ? [...hist].reverse().map(h=>`<div style="padding:6px 0;border-bottom:1px solid var(--border);font-size:12px"><span style="color:var(--muted)">${h.date}</span><br>${esc(h.text)}</div>`).join('')
+      : '<div style="color:var(--muted);font-size:12px">메모 이력 없음</div>';
+  }
+  document.getElementById('memoModal').classList.add('visible');
+  setTimeout(()=>document.getElementById('memoText').focus(), 100);
+}
+
+async function saveMemo(){
+  if(!pendingMemoId||!db) return;
+  const text = document.getElementById('memoText').value.trim();
+  if(!text){ showAlert('내용을 입력해주세요.',true); return; }
+  const member = members.find(m=>m.id===pendingMemoId);
+  const hist = member?.memoHistory ? [...member.memoHistory] : (member?.memo ? [{text:member.memo, date:'이전'}] : []);
+  hist.push({ text, date: TODAY });
+  try{
+    await db.collection('gym_members').doc(pendingMemoId).update({ memo: text, memoHistory: hist });
+    showAlert('메모 추가됨 ✅');
+    closeMemoModal();
+  }catch(e){ showAlert('저장 실패: '+e.message, true); }
+}
+
+function closeMemoModal(){
+  document.getElementById('memoModal').classList.remove('visible');
+  pendingMemoId = null;
+}
+
+let pendingLockerId = null;
+function openLocker(id, name, currentLocker){
+  if(!adminAuth){ requireAdmin(()=>openLocker(id,name,currentLocker)); return; }
+  pendingLockerId = id;
+  document.getElementById('lockerMemberName').textContent = name + '님';
+  document.getElementById('lockerNum').value = currentLocker || '';
+  // 사용 중인 락커 현황 표시
+  const used = members.filter(m=>m.locker&&m.id!==id).map(m=>`${m.locker}(${m.name})`);
+  document.getElementById('lockerListPreview').textContent = used.length ? '사용 중: '+used.join(', ') : '비어있는 락커 없음 정보 없음';
+  document.getElementById('lockerModal').classList.add('visible');
+}
+async function saveLocker(){
+  if(!pendingLockerId||!db) return;
+  const locker = document.getElementById('lockerNum').value.trim();
+  // 중복 체크
+  const dup = members.find(m=>m.locker===locker&&m.id!==pendingLockerId);
+  if(locker && dup){ showAlert(`${dup.name}님이 이미 사용 중입니다.`,true); return; }
+  try{
+    await db.collection('gym_members').doc(pendingLockerId).update({ locker: locker || null });
+    showAlert(locker ? `락커 ${locker} 배정 완료` : '락커 해제 완료');
+    closeLockerModal();
+  }catch(e){ showAlert('저장 실패: '+e.message,true); }
+}
+function closeLockerModal(){
+  document.getElementById('lockerModal').classList.remove('visible');
+  pendingLockerId = null;
+}
+
+async function deleteMember(id,name){
+  if(!adminAuth){ requireAdmin(()=>deleteMember(id,name)); return; }
+  if(!confirm(`"${name}" 회원을 삭제하시겠습니까?`)) return;
+  try{ await db.collection('gym_members').doc(id).delete(); showAlert(`${name} 삭제됨`); }
+  catch(e){ showAlert('삭제 실패',true); }
+}
+
+function renderMemberList(filter=''){
+  const el=document.getElementById('memberList');
+  const today=new Date();
+  const is4digit = /^\d{4}$/.test(filter);
+  const list=filter ? members.filter(m=>
+    m.name.includes(filter)||m.id.includes(filter)||(m.phone||'').includes(filter)||
+    (is4digit && (m.phone||'').replace(/\D/g,'').endsWith(filter))
+  ) : members;
+  if(!list.length){ el.innerHTML='<div class="empty"><div class="empty-i">👥</div><div class="empty-t">회원 없음</div></div>'; return; }
+  el.innerHTML=list.map(m=>{
+    const end=new Date(m.endDate);
+    const days=Math.ceil((end-today)/(1000*60*60*24));
+    const active=days>0;
+    const av=m.photoData?`<img src="${m.photoData}">`:m.avatar||'👤';
+    return `<div class="member-card">
+      <div class="member-avatar" style="background:${m.color||'var(--border)'}22;color:${m.color||'var(--primary)'}">${av}</div>
+      <div class="member-card-info">
+        <div class="member-card-name">${esc(m.name)} <span style="font-size:11px;color:var(--muted)">${m.id}</span>${m.faceDescriptor?'<span style="font-size:10px;color:var(--purple);margin-left:4px">🎭</span>':''} <span class="points-badge">⭐ ${m.points||0}P</span></div>
+        <div class="member-card-detail">${m.ticket} · ${m.endDate}까지 · ${active?days+'일 남음':'만료'}</div>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:3px;flex-wrap:wrap">
+          ${m.locker?`<span style="font-size:11px;color:var(--muted)">🔐 락커 <b style="color:var(--text)">${esc(m.locker)}</b></span>`:''}
+          ${m.memo?`<div style="font-size:11px;color:var(--primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px">📝 ${esc(m.memo)}</div>`:''}
+        </div>
+      </div>
+      <div class="member-card-actions">
+        <span class="status-badge ${active?'status-active':'status-expired'}">${active?'이용중':'만료'}</span>
+        <div class="pts-ctrl">
+          <span class="points-badge">⭐ ${m.points||0}P</span>
+          <button class="btn-pts-adj" onclick="requireAdmin(()=>addPoint('${m.id}',-1))">−</button>
+          <button class="btn-pts-adj" onclick="requireAdmin(()=>addPoint('${m.id}',+1))">+</button>
+        </div>
+        <button class="btn btn-s btn-sm" onclick="openRewards('${m.id}','${esc(m.name)}',${m.points||0})">🎁</button>
+        <button class="btn btn-s btn-sm" onclick="openMemo('${m.id}','${esc(m.name)}',\`${esc(m.memo||'')}\`)" style="${m.memo?'color:var(--primary);border-color:var(--primary)':''}">📝</button>
+        <button class="btn btn-s btn-sm" onclick="openLocker('${m.id}','${esc(m.name)}','${esc(m.locker||'')}')" style="${m.locker?'color:var(--orange);border-color:var(--orange)':''}">🔐</button>
+        <button class="btn btn-s btn-sm" onclick="openRenewal('${m.id}','${esc(m.name)}','${m.endDate}')">🔄 갱신</button>
+        <button class="btn btn-d btn-sm" onclick="deleteMember('${m.id}','${esc(m.name)}')">삭제</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterMembers(q){ renderMemberList(q); }
+
+async function addPoint(id, delta){
+  if(!db) return;
+  try{
+    await db.collection('gym_members').doc(id).update({
+      points: firebase.firestore.FieldValue.increment(delta)
+    });
+    showAlert(`${delta > 0 ? '+' : ''}${delta}P 적용됨 ✅`);
+  }catch(e){ showAlert('포인트 조정 실패',true); }
+}
+
+// ══════════════════════════════════════════════
+//  STATS
+// ══════════════════════════════════════════════
+function renderStats(){
+  const today=new Date();
+  const active=members.filter(m=>new Date(m.endDate)>today).length;
+  const expiring=members.filter(m=>{const d=Math.ceil((new Date(m.endDate)-today)/(1000*60*60*24));return d>0&&d<=7;});
+  document.getElementById('stTotal').textContent=members.length;
+  document.getElementById('stActive').textContent=active;
+  document.getElementById('stToday').textContent=checkins.filter(c=>c.type==='in').length;
+  document.getElementById('stExpired').textContent=expiring.length;
+  const withFace=members.filter(m=>m.faceDescriptor).length;
+  document.getElementById('stFace').textContent=withFace+'명';
+  document.getElementById('stNoFace').textContent=(members.length-withFace)+'명';
+  const totalPts=members.reduce((s,m)=>s+(m.points||0),0);
+  const ptEl=document.getElementById('stTotalPoints');
+  if(ptEl) ptEl.textContent=totalPts+'P';
+  const expSorted = [...expiring].sort((a,b)=>new Date(a.endDate)-new Date(b.endDate));
+  const urgCnt = [0,0,0]; // [1-2일, 3-5일, 6-7일]
+  expSorted.forEach(m=>{const d=Math.ceil((new Date(m.endDate)-today)/(1000*60*60*24)); if(d<=2)urgCnt[0]++; else if(d<=5)urgCnt[1]++; else urgCnt[2]++;});
+  document.getElementById('expiringList').innerHTML=expSorted.length===0
+    ?'<div class="empty"><div class="empty-i">✅</div><div class="empty-t">만료 임박 회원 없음</div></div>'
+    :`<div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+        ${urgCnt[0]?`<span style="padding:3px 10px;border-radius:12px;font-size:12px;font-weight:700;background:rgba(220,53,69,.1);color:var(--red)">🔴 ${urgCnt[0]}명 (1-2일)</span>`:''}
+        ${urgCnt[1]?`<span style="padding:3px 10px;border-radius:12px;font-size:12px;font-weight:700;background:rgba(234,108,26,.1);color:var(--orange)">🟠 ${urgCnt[1]}명 (3-5일)</span>`:''}
+        ${urgCnt[2]?`<span style="padding:3px 10px;border-radius:12px;font-size:12px;font-weight:700;background:rgba(217,119,6,.1);color:var(--gold)">🟡 ${urgCnt[2]}명 (6-7일)</span>`:''}
+      </div>`+expSorted.map(m=>{
+      const d=Math.ceil((new Date(m.endDate)-today)/(1000*60*60*24));
+      const uc=d<=2?'var(--red)':d<=5?'var(--orange)':'var(--gold)';
+      const ub=d<=2?'rgba(220,53,69,.08)':d<=5?'rgba(234,108,26,.08)':'rgba(217,119,6,.08)';
+      return `<div class="checkin-item" style="border-left:3px solid ${uc}">
+        <div class="member-avatar" style="background:${m.color||'var(--border)'}22;color:${m.color||'var(--primary)'}">${m.avatar||'👤'}</div>
+        <div class="checkin-info">
+          <div class="checkin-name">${esc(m.name)}</div>
+          <div class="checkin-detail">${m.ticket} · ${m.endDate}까지</div>
+          ${m.phone?`<div style="font-size:11px;color:var(--muted);margin-top:2px">📞 ${m.phone}</div>`:''}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          <span class="status-badge" style="background:${ub};color:${uc}">${d}일 남음</span>
+          ${m.phone?`<a href="tel:${m.phone.replace(/\D/g,'')}" style="font-size:11px;color:var(--primary);text-decoration:none;font-weight:600">📞 전화</a>`:''}
+        </div>
+      </div>`;
+    }).join('');
+}
+
+function updateDataPage(){
+  document.getElementById('backupMemberCount').textContent=members.length+'명';
+  updFbUI();
+}
+
+// ══════════════════════════════════════════════
+//  BACKUP / RESTORE
+// ══════════════════════════════════════════════
+function exportBackup(){
+  const data={
+    version:'2.0', exportedAt:new Date().toISOString(),
+    gymName:cfg.gymName||'GYM PRO',
+    members: members.map(m=>({...m, faceDescriptor:m.faceDescriptor?Array.from(m.faceDescriptor):null}))
+  };
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`gym_backup_${TODAY}.json`; a.click();
+  URL.revokeObjectURL(url);
+  showAlert(`${members.length}명 백업 완료 ✅`);
+}
+
+async function importBackup(input){
+  const file=input.files[0]; if(!file) return;
+  if(!db){ showAlert('Firebase 연결 필요',true); return; }
+  try{
+    const text=await file.text();
+    const data=JSON.parse(text);
+    if(!Array.isArray(data.members)) throw new Error('유효하지 않은 백업 파일');
+    if(!confirm(`${data.members.length}명 데이터를 Firestore에 복원하시겠습니까?\n기존 동일 ID 데이터는 덮어씁니다.`)) return;
+    const batch=db.batch();
+    data.members.forEach(m=>{
+      const ref=db.collection('gym_members').doc(m.id);
+      const rec={...m};
+      delete rec.createdAt;
+      rec.createdAt=firebase.firestore.FieldValue.serverTimestamp();
+      batch.set(ref,rec);
+    });
+    await batch.commit();
+    showAlert(`${data.members.length}명 복원 완료 ✅`);
+  }catch(e){ showAlert('복원 실패: '+e.message,true); }
+  input.value='';
+}
+
+async function clearTodayCheckins(){
+  if(!db) return;
+  if(!confirm('오늘 출입기록을 모두 삭제하시겠습니까?')) return;
+  const snap=await db.collection('gym_checkins').where('date','==',TODAY).get();
+  if(snap.empty){ showAlert('삭제할 기록 없음'); return; }
+  const batch=db.batch();
+  snap.forEach(d=>batch.delete(d.ref));
+  await batch.commit();
+  showAlert('오늘 출입기록 초기화 완료');
+}
+
+// ══════════════════════════════════════════════
+//  PAGE SWITCH
+// ══════════════════════════════════════════════
+function showPage(id, el){
+  // 관리자 전용 탭은 이중 방어
+  if((id==='register'||id==='data'||id==='trainer'||id==='inquiries') && !adminAuth){ requireAdmin(()=>showPage(id,el)); return; }
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(el) el.classList.add('active');
+  // camera management
+  if(id==='face'){
+    if(regStream){ regStream.getTracks().forEach(t=>t.stop()); regStream=null;
+      document.getElementById('regFacePreviewBox').style.display='none';
+      document.getElementById('btnCaptureFace').style.display='none'; }
+    if(!faceStream && modelsLoaded) startFaceCam();
+    else if(!modelsLoaded) loadModels();
+  } else {
+    if(id!=='register' && faceStream){ stopFaceCam(); setFaceStatus('loading','카메라 꺼짐'); }
+  }
+  if(id==='members') renderMemberList();
+  if(id==='stats'){ renderStats(); renderCharts(); }
+  if(id==='checkin') renderCheckinList();
+  if(id==='data') updateDataPage();
+  if(id==='trainer'){
+    renderTrainerList();
+    refreshPTSelects();
+    renderPTContracts();
+    renderTodayPT();
+    const sm = document.getElementById('settle-month');
+    if(sm && !sm.value) sm.value = TODAY.slice(0,7);
+    setPTFilter('active');
+  }
+}
+
+// ══════════════════════════════════════════════
+//  SPEECH
+// ══════════════════════════════════════════════
+let cachedVoices = [];
+function loadVoices(){
+  cachedVoices = speechSynthesis.getVoices();
+  console.log('[VOICE] 목록 로드:', cachedVoices.length, '개 / ko:', cachedVoices.filter(v=>v.lang.startsWith('ko')).map(v=>v.name));
+}
+if(window.speechSynthesis){
+  speechSynthesis.addEventListener('voiceschanged', loadVoices);
+  loadVoices();
+}
+
+function _doSpeak(text){
+  const utt = new SpeechSynthesisUtterance(text);
+  utt.lang = 'ko-KR';
+  utt.rate = 1.0;
+  utt.pitch = 1.0;
+  utt.volume = 1.0;
+  const voices = cachedVoices.length ? cachedVoices : speechSynthesis.getVoices();
+  const koVoice = voices.find(v => v.lang.startsWith('ko'));
+  console.log('[SPEAK] _doSpeak — voices:', voices.length, '/ koVoice:', koVoice ? koVoice.name : '없음(lang=ko-KR만)');
+  if(koVoice) utt.voice = koVoice;
+  utt.onstart = () => console.log('[SPEAK] ▶ 재생 시작:', text);
+  utt.onend   = () => console.log('[SPEAK] ■ 재생 완료:', text);
+  utt.onerror = (e) => console.error('[SPEAK] ✗ 오류:', e.error, '/', text);
+  speechSynthesis.resume();
+  speechSynthesis.speak(utt);
+  console.log('[SPEAK] speak() 요청 직후 — speaking:', speechSynthesis.speaking, '/ pending:', speechSynthesis.pending);
+}
+
+function speak(text){
+  if(!window.speechSynthesis){ console.warn('[SPEAK] speechSynthesis 없음'); return; }
+  console.log('[SPEAK] 진입 — text:', text,
+    '/ speaking:', speechSynthesis.speaking,
+    '/ pending:', speechSynthesis.pending,
+    '/ paused:', speechSynthesis.paused);
+  if(speechSynthesis.speaking || speechSynthesis.pending){
+    // 다른 음성 재생·대기 중: cancel 후 200ms 뒤 재생
+    console.log('[SPEAK] 재생 중 → cancel 후 200ms 대기');
+    speechSynthesis.cancel();
+    setTimeout(() => _doSpeak(text), 200);
+  } else {
+    // 아무것도 재생 중이 아님: 바로 재생 (cancel 없이)
+    _doSpeak(text);
+  }
+}
+
+// ══════════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════════
+function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+let _at;
+function showAlert(msg,err=false){
+  const el=document.getElementById('alertMsg');
+  el.textContent=msg; el.className='alert'+(err?' error':'');
+  el.style.display='block'; clearTimeout(_at); _at=setTimeout(()=>el.style.display='none',2600);
+}
+
+function updateTime(){
+  const n=new Date();
+  document.getElementById('headerTime').textContent=n.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+}
+setInterval(updateTime,1000); updateTime();
+
+// ══════════════════════════════════════════════
+//  BOOT
+// ══════════════════════════════════════════════
+(function boot(){
+  document.getElementById('setup').style.display = 'none';
+  document.getElementById('gym-name-hdr').textContent = cfg.gymName||'';
+  if(!cfg.adminPw) cfg.adminPw = '0000'; // 초기 기본 비밀번호
+  updAdminBadge();
+  initFb(FB_CONFIG);
+  setTimeout(loadModels, 800);
+})();
+</script>
+</body>
+</html>
