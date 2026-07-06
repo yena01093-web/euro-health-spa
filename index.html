@@ -222,7 +222,7 @@
 
 <!-- ══════════════════ 시설안내 ══════════════════
      헬스존: assets/gym-3,5,6,7,8.jpg (카디오존 실사진 적용됨)
-     스파존: assets/spa-1.jpg ~ spa-4.jpg 파일만 넣으면 자동 반영 (아직 미보유, placeholder 유지)
+     치료실(구 스파존): assets/spa-1~3.jpg 는 현재 무료 스톡사진(임시) — 실제 시설 사진 받으면 같은 파일명으로 교체
 -->
 <section id="facility">
   <div class="wrap">
@@ -272,21 +272,24 @@
 
     <div class="facility-group">
       <div class="facility-group-title reveal">
-        <h3>스파존 · SPA ZONE</h3>
-        <span>사우나 &amp; 릴렉스 공간 (사진 준비중)</span>
+        <h3>치료실 · RECOVERY ROOM</h3>
+        <span>마사지 &amp; 재활·회복 케어 (예시 이미지 — 실제 시설 사진 준비중)</span>
       </div>
       <div class="facility-grid">
-        <div class="facility-item wide reveal">
-          <img class="thumb-img" src="assets/spa-1.jpg" alt="스파존 1" onerror="this.remove()">
-          <div class="thumb-placeholder">사우나 전경<br>(16:10 권장)</div>
+        <div class="facility-item wide reveal" onclick="openLightbox('assets/spa-1.jpg','치료실 전경 (예시)')">
+          <img class="thumb-img" src="assets/spa-1.jpg" alt="치료실 전경" onerror="this.remove()" loading="lazy">
+          <div class="thumb-placeholder">치료실 전경<br>(16:10 권장)</div>
+          <div class="facility-overlay"><div class="facility-name">치료실 전경 (예시)</div></div>
         </div>
-        <div class="facility-item reveal">
-          <img class="thumb-img" src="assets/spa-2.jpg" alt="스파존 2" onerror="this.remove()">
-          <div class="thumb-placeholder">스파 사진<br>(4:5 권장)</div>
+        <div class="facility-item reveal" onclick="openLightbox('assets/spa-2.jpg','재활·회복 케어실 (예시)')">
+          <img class="thumb-img" src="assets/spa-2.jpg" alt="재활·회복 케어실" onerror="this.remove()" loading="lazy">
+          <div class="thumb-placeholder">치료실 사진<br>(4:5 권장)</div>
+          <div class="facility-overlay"><div class="facility-name">재활·회복 케어실 (예시)</div></div>
         </div>
-        <div class="facility-item reveal">
-          <img class="thumb-img" src="assets/spa-3.jpg" alt="스파존 3" onerror="this.remove()">
-          <div class="thumb-placeholder">스파 사진<br>(4:5 권장)</div>
+        <div class="facility-item reveal" onclick="openLightbox('assets/spa-3.jpg','전문 마사지 케어 (예시)')">
+          <img class="thumb-img" src="assets/spa-3.jpg" alt="전문 마사지 케어" onerror="this.remove()" loading="lazy">
+          <div class="thumb-placeholder">치료실 사진<br>(4:5 권장)</div>
+          <div class="facility-overlay"><div class="facility-name">전문 마사지 케어 (예시)</div></div>
         </div>
       </div>
     </div>
@@ -332,11 +335,11 @@
         <div class="program-icon">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2c-2 4-6 5-6 10a6 6 0 0012 0c0-5-4-6-6-10z"/></svg>
         </div>
-        <div class="program-title">스파 &amp; 회복 프로그램</div>
-        <div class="program-desc">사우나, 릴렉세이션 스파로 운동 후 근육 이완과 피로 회복을 도와드립니다.</div>
+        <div class="program-title">마사지 &amp; 재활·회복 케어</div>
+        <div class="program-desc">전문 마사지와 재활·회복 케어로 운동 후 근육 이완과 피로 회복을 도와드립니다. 40~50대 회원분들도 편하게 이용하실 수 있어요.</div>
         <div class="program-tags">
-          <span class="program-tag">사우나</span>
-          <span class="program-tag">스파</span>
+          <span class="program-tag">전문 마사지</span>
+          <span class="program-tag">재활케어</span>
           <span class="program-tag">회복케어</span>
         </div>
       </div>
@@ -366,9 +369,9 @@
         <div class="plan-name">헬스 + 스파 통합</div>
         <div class="plan-price">₩00,000 <span>/ 월</span></div>
         <div class="plan-features">
-          <div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg> 헬스장 + 스파존 자유 이용</div>
+          <div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg> 헬스장 + 치료실 자유 이용</div>
           <div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg> 그룹 운동 프로그램 참여</div>
-          <div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg> 사우나 무제한 이용</div>
+          <div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg> 마사지·재활케어 이용</div>
           <div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg> 락커 이용</div>
         </div>
       </div>
