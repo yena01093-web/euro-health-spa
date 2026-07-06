@@ -48,7 +48,7 @@
     position: absolute; inset: 0; z-index: 0;
     background: linear-gradient(160deg, #0F1E35 0%, #0A1628 55%, #0A1628 100%);
   }
-  .hero-bg-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.5; }
+  .hero-bg-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; opacity: 0.85; }
   .hero-bg::after {
     content: ''; position: absolute; inset: 0; z-index: 2;
     background: linear-gradient(0deg, #0A1628 15%, rgba(10,22,40,0.75) 45%, rgba(10,22,40,0.6) 100%);
@@ -201,9 +201,7 @@
 <!-- ══════════════════ HERO ══════════════════ -->
 <section id="hero">
   <div class="hero-bg">
-    <video class="hero-video" autoplay muted loop playsinline poster="assets/hero-poster.jpg" onerror="this.remove()">
-      <source src="assets/hero-bg.mp4" type="video/mp4">
-    </video>
+    <img class="hero-bg-img" src="assets/hero-poster.jpg" alt="유로헬스에서 원하는 몸매를 만드세요">
   </div>
   <div class="wrap hero-content">
     <div class="hero-eyebrow">Fitness &amp; Spa Complex</div>
