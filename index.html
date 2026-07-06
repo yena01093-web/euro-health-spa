@@ -85,7 +85,7 @@
   .facility-group-title span { font-size: 13px; color: #4A5E72; }
 
   .facility-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-  .facility-item { position: relative; border-radius: 16px; overflow: hidden; aspect-ratio: 4/5; background: #0F1E35; border: 1px solid rgba(200,164,90,0.1); }
+  .facility-item { position: relative; border-radius: 16px; overflow: hidden; aspect-ratio: 4/5; background: #0F1E35; border: 1px solid rgba(200,164,90,0.1); cursor: pointer; }
   .facility-item.wide { grid-column: span 2; aspect-ratio: 16/10; }
   .thumb-placeholder {
     position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
@@ -156,6 +156,14 @@
 
   .reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.6s ease, transform 0.6s ease; }
   .reveal.visible { opacity: 1; transform: none; }
+
+  /* ── Lightbox ────────────────────────────────────── */
+  .lightbox { position: fixed; inset: 0; z-index: 500; background: rgba(5,10,18,0.92); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; padding: 40px; cursor: zoom-out; }
+  .lightbox.visible { display: flex; }
+  .lightbox img { max-width: 90vw; max-height: 82vh; object-fit: contain; border-radius: 10px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); cursor: default; }
+  .lightbox-caption { position: absolute; bottom: 32px; left: 0; right: 0; text-align: center; color: #EDEDED; font-size: 15px; font-weight: 600; letter-spacing: 0.02em; }
+  .lightbox-close { position: absolute; top: 24px; right: 32px; width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); color: #EDEDED; font-size: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background 0.2s; }
+  .lightbox-close:hover { background: rgba(255,255,255,0.18); }
 
   @media (max-width: 900px) {
     .nav-links, .nav-cta { display: none; }
@@ -233,24 +241,32 @@
         <span>신규 도입 카디오 머신</span>
       </div>
       <div class="facility-grid">
-        <div class="facility-item wide reveal">
-          <img class="thumb-img" src="assets/gym-6.jpg" alt="신규 카디오존 전경">
+        <div class="facility-item wide reveal" onclick="openLightbox('assets/gym-6.jpg','카디오존 (신규 장비)')">
+          <img class="thumb-img" src="assets/gym-6.jpg" alt="신규 카디오존 전경" loading="lazy">
           <div class="facility-overlay"><div class="facility-name">카디오존 (신규 장비)</div></div>
         </div>
-        <div class="facility-item reveal">
-          <img class="thumb-img" src="assets/gym-5.jpg" alt="리컴번트 바이크">
+        <div class="facility-item reveal" onclick="openLightbox('assets/gym-5.jpg','리컴번트 바이크')">
+          <img class="thumb-img" src="assets/gym-5.jpg" alt="리컴번트 바이크" loading="lazy">
           <div class="facility-overlay"><div class="facility-name">리컴번트 바이크</div></div>
         </div>
-        <div class="facility-item reveal">
-          <img class="thumb-img" src="assets/gym-7.jpg" alt="트레드밀존">
+        <div class="facility-item reveal" onclick="openLightbox('assets/gym-7.jpg','트레드밀존')">
+          <img class="thumb-img" src="assets/gym-7.jpg" alt="트레드밀존" loading="lazy">
           <div class="facility-overlay"><div class="facility-name">트레드밀존</div></div>
         </div>
-        <div class="facility-item reveal">
-          <img class="thumb-img" src="assets/gym-3.jpg" alt="스텝밀존">
+        <div class="facility-item reveal" onclick="openLightbox('assets/gym-3.jpg','스텝밀존')">
+          <img class="thumb-img" src="assets/gym-3.jpg" alt="스텝밀존" loading="lazy">
           <div class="facility-overlay"><div class="facility-name">스텝밀존</div></div>
         </div>
-        <div class="facility-item wide reveal">
-          <img class="thumb-img" src="assets/gym-8.jpg" alt="신형 웨이트 머신존">
+        <div class="facility-item reveal" onclick="openLightbox('assets/gym-9.jpg','파워랙존')">
+          <img class="thumb-img" src="assets/gym-9.jpg" alt="파워랙존" loading="lazy">
+          <div class="facility-overlay"><div class="facility-name">파워랙존</div></div>
+        </div>
+        <div class="facility-item reveal" onclick="openLightbox('assets/gym-10.jpg','로우로우 머신')">
+          <img class="thumb-img" src="assets/gym-10.jpg" alt="로우로우 머신" loading="lazy">
+          <div class="facility-overlay"><div class="facility-name">로우로우 머신</div></div>
+        </div>
+        <div class="facility-item wide reveal" onclick="openLightbox('assets/gym-8.jpg','신형 웨이트 머신존')">
+          <img class="thumb-img" src="assets/gym-8.jpg" alt="신형 웨이트 머신존" loading="lazy">
           <div class="facility-overlay"><div class="facility-name">신형 웨이트 머신존</div></div>
         </div>
       </div>
@@ -422,6 +438,13 @@
   </div>
 </section>
 
+<!-- ── 사진 확대 보기 (라이트박스) ── -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+  <div class="lightbox-close" onclick="closeLightbox(event)">✕</div>
+  <img id="lightboxImg" src="" alt="">
+  <div class="lightbox-caption" id="lightboxCaption"></div>
+</div>
+
 <footer>
   <div class="wrap footer-inner">
     <div class="footer-copy">상호: 유로헬스클럽 · 충청북도 제천시 의림대로 233 (청전동) · 043-646-8833<br>© 2026 유로헬스클럽. All rights reserved.</div>
@@ -446,6 +469,17 @@ const ro = new IntersectionObserver((entries) => {
   entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); ro.unobserve(e.target); } });
 }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
 revealEls.forEach(el => ro.observe(el));
+
+function openLightbox(src, caption) {
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('lightboxCaption').textContent = caption || '';
+  document.getElementById('lightbox').classList.add('visible');
+}
+function closeLightbox(e) {
+  if (e && e.target.id === 'lightboxImg') return; // 이미지 자체 클릭은 무시 (닫힘 방지)
+  document.getElementById('lightbox').classList.remove('visible');
+}
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLightbox(); });
 
 // gym.html(회원관리 시스템)과 같은 Firebase 프로젝트 — gym_inquiries 컬렉션에 문의를 저장하면
 // 직원이 gym.html의 "상담문의" 탭에서 바로 확인하고 회원등록으로 이어갈 수 있음
