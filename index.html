@@ -36,8 +36,23 @@
   .nav-links a:hover { color: #C8A45A; }
   .nav-cta { padding: 10px 22px; border: 1px solid rgba(255,255,255,0.2); border-radius: 30px; font-size: 13px; font-weight: 600; color: #EDEDED; transition: all 0.25s; }
   .nav-cta:hover { background: #C8A45A; border-color: #C8A45A; color: #0A1628; }
-  .nav-burger { display: none; flex-direction: column; gap: 5px; cursor: pointer; }
-  .nav-burger span { width: 24px; height: 2px; background: #EDEDED; }
+  .nav-burger { display: none; flex-direction: column; gap: 5px; cursor: pointer; z-index: 210; }
+  .nav-burger span { width: 24px; height: 2px; background: #EDEDED; transition: transform 0.25s ease, opacity 0.25s ease; }
+  .nav-burger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .nav-burger.open span:nth-child(2) { opacity: 0; }
+  .nav-burger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  .nav-mobile-menu {
+    position: fixed; inset: 0; z-index: 199;
+    background: rgba(10,22,40,0.98); backdrop-filter: blur(10px);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px;
+    opacity: 0; pointer-events: none; transform: translateY(-8px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+  .nav-mobile-menu.open { opacity: 1; pointer-events: auto; transform: none; }
+  .nav-mobile-menu a { font-size: 22px; font-weight: 600; color: #EDEDED; }
+  .nav-mobile-menu a:hover { color: #C8A45A; }
+  .nav-mobile-menu .nav-cta { display: inline-block; margin-top: 10px; }
 
   /* ── Hero ────────────────────────────────────────── */
   #hero {
@@ -214,8 +229,17 @@
     <a href="#contact">오시는길</a>
   </div>
   <a href="#contact" class="nav-cta">상담 문의</a>
-  <div class="nav-burger"><span></span><span></span><span></span></div>
+  <div class="nav-burger" id="navBurger" onclick="toggleMobileMenu()"><span></span><span></span><span></span></div>
 </nav>
+
+<div class="nav-mobile-menu" id="navMobileMenu">
+  <a href="#facility" onclick="closeMobileMenu()">시설안내</a>
+  <a href="#trainers" onclick="closeMobileMenu()">트레이너</a>
+  <a href="#programs" onclick="closeMobileMenu()">프로그램</a>
+  <a href="#membership" onclick="closeMobileMenu()">회원안내</a>
+  <a href="#contact" onclick="closeMobileMenu()">오시는길</a>
+  <a href="#contact" class="nav-cta" onclick="closeMobileMenu()">상담 문의</a>
+</div>
 
 <!-- ══════════════════ HERO ══════════════════ -->
 <section id="hero">
@@ -528,6 +552,15 @@
 window.addEventListener('scroll', () => {
   document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 20);
 });
+
+function toggleMobileMenu() {
+  document.getElementById('navBurger').classList.toggle('open');
+  document.getElementById('navMobileMenu').classList.toggle('open');
+}
+function closeMobileMenu() {
+  document.getElementById('navBurger').classList.remove('open');
+  document.getElementById('navMobileMenu').classList.remove('open');
+}
 
 const revealEls = document.querySelectorAll('.reveal');
 const ro = new IntersectionObserver((entries) => {
