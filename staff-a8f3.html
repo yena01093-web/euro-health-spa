@@ -334,6 +334,7 @@ header{background:var(--card);border-bottom:1px solid var(--border);padding:12px
   <div class="tab" id="tab-inquiries" onclick="requireAdmin(()=>showPage('inquiries',this))">📩 상담문의<span id="inqBadge" style="display:none;background:var(--red);color:#fff;border-radius:10px;font-size:10px;padding:1px 6px;margin-left:4px"></span></div>
   <div class="tab" onclick="showPage('stats',this)">📊 현황</div>
   <div class="tab" id="tab-trainer" onclick="requireAdmin(()=>showPage('trainer',this))">👨‍💼 트레이너</div>
+  <div class="tab" id="tab-video" onclick="requireAdmin(()=>showPage('video',this))">🎬 영상관리</div>
   <div class="tab" id="tab-data" onclick="requireAdmin(()=>showPage('data',this))">💾 데이터</div>
 </div>
 
@@ -580,6 +581,26 @@ header{background:var(--card);border-bottom:1px solid var(--border);padding:12px
   </div>
 </div>
 
+<!-- ── PAGE: 소개 영상 관리 (홈페이지 트레이너 섹션 위에 노출) ── -->
+<div class="page" id="page-video">
+  <div class="section-title">소개 영상 관리</div>
+  <div class="card" style="margin-bottom:16px">
+    <div style="margin-bottom:10px">
+      <label class="form-label">영상 파일 (mp4 권장, 최대 100MB)</label>
+      <input type="file" class="form-input" id="videoFileInput" accept="video/*" onchange="onVideoFileSelected(this)">
+    </div>
+    <div id="videoUploadStatus" style="font-size:13px;color:var(--muted);margin-bottom:10px"></div>
+    <button class="btn btn-p btn-w" id="videoUploadBtn" onclick="uploadIntroVideo()" disabled>업로드</button>
+  </div>
+
+  <div class="card">
+    <div class="data-card-title">현재 게시된 영상</div>
+    <video id="currentIntroVideo" controls style="width:100%;border-radius:10px;background:#000;margin-top:10px;display:none"></video>
+    <div id="noIntroVideo" style="font-size:13px;color:var(--muted);margin-top:10px">아직 등록된 영상이 없습니다.</div>
+    <button class="btn btn-d btn-sm" id="deleteVideoBtn" onclick="deleteIntroVideo()" style="margin-top:12px;display:none">✕ 영상 삭제</button>
+  </div>
+</div>
+
 <!-- ── PAGE: 데이터관리 ── -->
 <div class="page" id="page-data">
   <div class="data-card">
@@ -759,6 +780,7 @@ header{background:var(--card);border-bottom:1px solid var(--border);padding:12px
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
@@ -863,7 +885,7 @@ function changePw(){
 // ══════════════════════════════════════════════
 //  STATE
 // ══════════════════════════════════════════════
-let db = null, fbOk = false;
+let db = null, fbOk = false, storage = null;
 let cfg = {};
 let members = [];
 let trainers = [];
@@ -912,6 +934,7 @@ function initFb(fc){
   try{
     if(!firebase.apps.length) firebase.initializeApp(fc);
     db = firebase.firestore();
+    storage = firebase.storage();
     fbOk = true;
     updFbUI();
     subAll();
@@ -920,6 +943,112 @@ function initFb(fc){
     console.error('Firebase:',e);
     fbOk = false; updFbUI();
     return false;
+  }
+}
+
+// ══════════════════════════════════════════════
+//  소개 영상 관리 (Firebase Storage + Firestore)
+//  Firestore 문서 site_content/intro_video 의 { url, path } 필드를 홈페이지 index.html이 읽어 재생함
+// ══════════════════════════════════════════════
+let pendingVideoFile = null;
+const MAX_VIDEO_MB = 100;
+
+function onVideoFileSelected(input){
+  const file = input.files && input.files[0];
+  const status = document.getElementById('videoUploadStatus');
+  const btn = document.getElementById('videoUploadBtn');
+  if(!file){ pendingVideoFile = null; btn.disabled = true; return; }
+  if(file.size > MAX_VIDEO_MB * 1024 * 1024){
+    status.textContent = `파일이 너무 커요 (${(file.size/1024/1024).toFixed(1)}MB). 최대 ${MAX_VIDEO_MB}MB까지 가능합니다.`;
+    status.style.color = 'var(--red)';
+    pendingVideoFile = null; btn.disabled = true;
+    return;
+  }
+  pendingVideoFile = file;
+  status.textContent = `선택됨: ${file.name} (${(file.size/1024/1024).toFixed(1)}MB)`;
+  status.style.color = 'var(--muted)';
+  btn.disabled = false;
+}
+
+async function uploadIntroVideo(){
+  if(!pendingVideoFile){ showAlert('영상 파일을 먼저 선택해주세요', true); return; }
+  if(!fbOk || !storage){ showAlert('Firebase 연결이 필요합니다', true); return; }
+  const status = document.getElementById('videoUploadStatus');
+  const btn = document.getElementById('videoUploadBtn');
+  btn.disabled = true;
+
+  try{
+    // 기존 영상이 있으면 먼저 삭제 (스토리지 용량 절약)
+    const existing = await db.collection('site_content').doc('intro_video').get();
+    if(existing.exists && existing.data().path){
+      try{ await storage.ref(existing.data().path).delete(); }catch(e){ /* 이미 없으면 무시 */ }
+    }
+
+    const path = `videos/intro_${Date.now()}_${pendingVideoFile.name}`;
+    const ref = storage.ref(path);
+    const task = ref.put(pendingVideoFile);
+
+    task.on('state_changed', snap => {
+      const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
+      status.textContent = `업로드 중... ${pct}%`;
+      status.style.color = 'var(--muted)';
+    });
+
+    await task;
+    const url = await ref.getDownloadURL();
+    await db.collection('site_content').doc('intro_video').set({
+      url, path,
+      uploadedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+
+    status.textContent = '✓ 업로드 완료! 홈페이지에 바로 반영됩니다.';
+    status.style.color = 'var(--green)';
+    document.getElementById('videoFileInput').value = '';
+    pendingVideoFile = null;
+    loadIntroVideoStatus();
+  }catch(e){
+    console.error('영상 업로드 실패:', e);
+    status.textContent = '업로드 실패: ' + e.message;
+    status.style.color = 'var(--red)';
+  }finally{
+    btn.disabled = true;
+  }
+}
+
+async function loadIntroVideoStatus(){
+  if(!fbOk) return;
+  const videoEl = document.getElementById('currentIntroVideo');
+  const noVideoEl = document.getElementById('noIntroVideo');
+  const delBtn = document.getElementById('deleteVideoBtn');
+  try{
+    const doc = await db.collection('site_content').doc('intro_video').get();
+    if(doc.exists && doc.data().url){
+      videoEl.src = doc.data().url;
+      videoEl.style.display = 'block';
+      noVideoEl.style.display = 'none';
+      delBtn.style.display = 'inline-block';
+    } else {
+      videoEl.style.display = 'none';
+      noVideoEl.style.display = 'block';
+      delBtn.style.display = 'none';
+    }
+  }catch(e){
+    console.error('영상 상태 조회 실패:', e);
+  }
+}
+
+async function deleteIntroVideo(){
+  if(!confirm('현재 영상을 삭제하시겠어요? 홈페이지에서도 바로 사라집니다.')) return;
+  try{
+    const doc = await db.collection('site_content').doc('intro_video').get();
+    if(doc.exists && doc.data().path){
+      try{ await storage.ref(doc.data().path).delete(); }catch(e){}
+    }
+    await db.collection('site_content').doc('intro_video').delete();
+    loadIntroVideoStatus();
+    showAlert('영상이 삭제되었습니다');
+  }catch(e){
+    showAlert('삭제 실패: ' + e.message, true);
   }
 }
 
@@ -2343,7 +2472,7 @@ async function clearTodayCheckins(){
 // ══════════════════════════════════════════════
 function showPage(id, el){
   // 관리자 전용 탭은 이중 방어
-  if((id==='register'||id==='data'||id==='trainer'||id==='inquiries') && !adminAuth){ requireAdmin(()=>showPage(id,el)); return; }
+  if((id==='register'||id==='data'||id==='trainer'||id==='inquiries'||id==='video') && !adminAuth){ requireAdmin(()=>showPage(id,el)); return; }
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
@@ -2361,6 +2490,7 @@ function showPage(id, el){
   if(id==='members') renderMemberList();
   if(id==='stats'){ renderStats(); renderCharts(); }
   if(id==='checkin') renderCheckinList();
+  if(id==='video') loadIntroVideoStatus();
   if(id==='data') updateDataPage();
   if(id==='trainer'){
     renderTrainerList();
