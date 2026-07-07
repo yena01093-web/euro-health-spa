@@ -383,7 +383,7 @@
     <p class="section-sub reveal">영상으로 먼저 만나보는 유로헬스클럽입니다.</p>
     <div class="intro-video-box reveal" id="introVideoBox">
       <div class="intro-video-empty" id="introVideoEmpty">영상 준비중입니다</div>
-      <video id="introVideoPlayer" controls playsinline style="display:none"></video>
+      <iframe id="introVideoPlayer" style="display:none;width:100%;height:100%;border:0" allowfullscreen></iframe>
     </div>
   </div>
 </section>
@@ -717,12 +717,12 @@ firebase.initializeApp(FB_CONFIG);
 const db = firebase.firestore();
 
 // ══════════════════════════════════════════════
-//  브랜드 소개 영상 (staff-a8f3.html에서 업로드한 영상을 표시)
+//  브랜드 소개 영상 (staff-a8f3.html에서 등록한 유튜브 영상을 임베드)
 // ══════════════════════════════════════════════
 db.collection('site_content').doc('intro_video').get().then(doc => {
-  if (doc.exists && doc.data().url) {
+  if (doc.exists && doc.data().youtubeId) {
     const player = document.getElementById('introVideoPlayer');
-    player.src = doc.data().url;
+    player.src = `https://www.youtube.com/embed/${doc.data().youtubeId}`;
     player.style.display = 'block';
     document.getElementById('introVideoEmpty').style.display = 'none';
   }
