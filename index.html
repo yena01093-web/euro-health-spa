@@ -717,16 +717,25 @@ firebase.initializeApp(FB_CONFIG);
 const db = firebase.firestore();
 
 // ══════════════════════════════════════════════
-//  브랜드 소개 영상 (staff-a8f3.html에서 등록한 유튜브 영상을 임베드)
+//  브랜드 소개 영상
+//  1순위: 유로헬스클럽 유튜브 채널의 최신 업로드 영상 (자동)
+//  2순위: staff-a8f3.html에서 수동으로 지정한 영상 (자동 조회 실패 시 대체)
 // ══════════════════════════════════════════════
-db.collection('site_content').doc('intro_video').get().then(doc => {
-  if (doc.exists && doc.data().youtubeId) {
-    const player = document.getElementById('introVideoPlayer');
-    player.src = `https://www.youtube.com/embed/${doc.data().youtubeId}`;
-    player.style.display = 'block';
-    document.getElementById('introVideoEmpty').style.display = 'none';
-  }
-}).catch(err => console.error('소개 영상 불러오기 실패:', err));
+function showIntroVideo(youtubeId) {
+  const player = document.getElementById('introVideoPlayer');
+  player.src = `https://www.youtube.com/embed/${youtubeId}`;
+  player.style.display = 'block';
+  document.getElementById('introVideoEmpty').style.display = 'none';
+}
+
+fetch('/api/latest-video')
+  .then(res => res.ok ? res.json() : Promise.reject(new Error('최신 영상 조회 실패')))
+  .then(data => showIntroVideo(data.videoId))
+  .catch(() => {
+    db.collection('site_content').doc('intro_video').get().then(doc => {
+      if (doc.exists && doc.data().youtubeId) showIntroVideo(doc.data().youtubeId);
+    }).catch(err => console.error('소개 영상 불러오기 실패:', err));
+  });
 
 // ══════════════════════════════════════════════
 //  카카오맵 (오시는 길)
