@@ -345,6 +345,7 @@ header{background:var(--card);border-bottom:1px solid var(--border);padding:12px
     <div class="fmp-step" id="mp1"><span class="dot"></span> SSD MobileNet (얼굴 감지)</div>
     <div class="fmp-step" id="mp2"><span class="dot"></span> Face Landmarks (특징점)</div>
     <div class="fmp-step" id="mp3"><span class="dot"></span> Face Recognition (인식)</div>
+    <div class="fmp-step" id="mp4"><span class="dot"></span> Age/Gender (나이 추정)</div>
   </div>
 
   <div class="face-wrap" id="faceWrap">
@@ -902,6 +903,8 @@ let detectionPaused = false;
 let detectionTimer = null;
 let cooldownMap = {};        // memberId -> Date.now()
 const COOLDOWN_MS = 20000;   // 20 seconds
+let recentAgeSamples = [];   // { age, ts } — 최근 매장 내 인식된 회원 나이 추정치 (평균 연령 계산용)
+const AGE_SAMPLE_WINDOW_MS = 30 * 60 * 1000; // 최근 30분 내 인식만 "현재 매장 내"로 간주
 let unknownCooldown = 0;     // 미등록 얼굴 음성 중복 방지 (5초)
 const MATCH_THRESHOLD = 0.52;
 let pendingFaceDesc = null;  // registration pending descriptor
@@ -1172,7 +1175,10 @@ async function loadModels(){
     stepModel(2,'done'); stepModel(3,'active');
 
     await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
-    stepModel(3,'done');
+    stepModel(3,'done'); stepModel(4,'active');
+
+    await faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL);
+    stepModel(4,'done');
 
     modelsLoaded = true;
     modelsLoading = false;
@@ -1627,7 +1633,7 @@ async function runDetection(){
   if(!vid || vid.readyState < 2 || !modelsLoaded) return;
   try{
     const opts = new faceapi.SsdMobilenetv1Options({minConfidence:0.5});
-    const det = await faceapi.detectSingleFace(vid, opts).withFaceLandmarks().withFaceDescriptor();
+    const det = await faceapi.detectSingleFace(vid, opts).withFaceLandmarks().withFaceDescriptor().withAgeAndGender();
     drawOverlay(det);
     if(!det){ setFaceStatus('detecting','🔍 얼굴 탐색 중...'); return; }
 
@@ -1681,7 +1687,7 @@ async function runDetection(){
     } else {
       cooldownMap[memberId] = now;
       const m = members.find(x=>x.id===memberId);
-      if(m){ handleFaceMatch(m); }
+      if(m){ handleFaceMatch(m, det.age); }
     }
   }catch(e){ console.error('detect:',e); }
 }
@@ -1711,7 +1717,7 @@ function drawOverlay(det){
   });
 }
 
-async function handleFaceMatch(member){
+async function handleFaceMatch(member, estimatedAge){
   const lastCk = checkins.find(c=>c.memberId===member.id);
   const type = (!lastCk || lastCk.type==='out') ? 'in' : 'out';
   const lbl = type==='in'?'입장':'퇴장';
@@ -1719,7 +1725,50 @@ async function handleFaceMatch(member){
   const earnedPoint = await recordCheckin(member.id, member.name, type, true);
   showMicCard(member, type, earnedPoint);
   speak(`${member.name}회원님 어서오세요`);
+  if(type==='in' && typeof estimatedAge==='number' && !isNaN(estimatedAge)){
+    recordAgeSample(estimatedAge);
+  }
 }
+
+// ══════════════════════════════════════════════
+//  매장 내 평균 연령 추정 (face-api.js age estimation 기반)
+//  홈페이지(index.html)가 gym_status/live 문서를 읽어 배경음악 선택 등에 활용할 수 있음
+// ══════════════════════════════════════════════
+function recordAgeSample(age){
+  recentAgeSamples.push({ age, ts: Date.now() });
+  pruneAgeSamples();
+}
+
+function pruneAgeSamples(){
+  const cutoff = Date.now() - AGE_SAMPLE_WINDOW_MS;
+  recentAgeSamples = recentAgeSamples.filter(s => s.ts >= cutoff);
+}
+
+async function pushGymAgeStats(){
+  if(!fbOk || !db) return;
+  pruneAgeSamples();
+  if(!recentAgeSamples.length) return; // 새로 인식된 사람이 없으면 굳이 안 씀 (불필요한 쓰기 절약)
+  const avg = recentAgeSamples.reduce((sum,s)=>sum+s.age, 0) / recentAgeSamples.length;
+  let ageGroup;
+  if(avg < 25) ageGroup = '10-20대';
+  else if(avg < 35) ageGroup = '20-30대';
+  else if(avg < 45) ageGroup = '30-40대';
+  else if(avg < 55) ageGroup = '40-50대';
+  else ageGroup = '50대 이상';
+
+  try{
+    await db.collection('gym_status').doc('live').set({
+      avgAge: Math.round(avg * 10) / 10,
+      ageGroup,
+      sampleCount: recentAgeSamples.length,
+      windowMinutes: AGE_SAMPLE_WINDOW_MS / 60000,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+  }catch(e){
+    console.error('매장 연령 통계 저장 실패:', e);
+  }
+}
+setInterval(pushGymAgeStats, 60000); // 1분마다 갱신 (변화 있을 때만 실제로 씀)
 
 function setFaceStatus(cls, txt){
   const el = document.getElementById('faceStatus');

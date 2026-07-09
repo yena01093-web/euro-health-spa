@@ -724,6 +724,15 @@ const db = firebase.firestore();
 let introPlaylist = [];
 let introPlaylistIndex = 0;
 let introYtPlayer = null;
+let gymAgeGroup = null; // staff-a8f3.html에서 실시간으로 추정한 매장 내 평균 연령대 (예: "20-30대")
+
+// 매장 내 평균 연령대 데이터 읽기 (현재는 로그만 — 실제 곡 선택 반영 로직은 추후 정책 정해지면 추가)
+db.collection('gym_status').doc('live').get().then(doc => {
+  if (doc.exists) {
+    gymAgeGroup = doc.data().ageGroup;
+    console.log('[매장 연령 통계]', doc.data());
+  }
+}).catch(err => console.error('매장 연령 통계 조회 실패:', err));
 
 function revealIntroVideo() {
   document.getElementById('introVideoPlayer').style.display = 'block';
