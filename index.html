@@ -724,15 +724,22 @@ const db = firebase.firestore();
 let introPlaylist = [];
 let introPlaylistIndex = 0;
 let introYtPlayer = null;
-let gymAgeGroup = null; // staff-a8f3.html에서 실시간으로 추정한 매장 내 평균 연령대 (예: "20-30대")
 
-// 매장 내 평균 연령대 데이터 읽기 (현재는 로그만 — 실제 곡 선택 반영 로직은 추후 정책 정해지면 추가)
-db.collection('gym_status').doc('live').get().then(doc => {
-  if (doc.exists) {
-    gymAgeGroup = doc.data().ageGroup;
-    console.log('[매장 연령 통계]', doc.data());
-  }
-}).catch(err => console.error('매장 연령 통계 조회 실패:', err));
+// 평균 연령대(gym_status/live의 ageGroup) → 유튜브 제목 태그([YOUNG]/[MID]) 매핑
+function ageGroupToTag(ageGroup) {
+  if (!ageGroup) return null;
+  if (ageGroup === '10-20대' || ageGroup === '20-30대') return 'YOUNG';
+  return 'MID'; // 30-40대, 40-50대, 50대 이상
+}
+
+// 태그 기준으로 재생목록 우선순위 결정: 목표 태그 곡 → (없으면) 태그 없는 공용 곡 → (그래도 없으면) 전체
+function pickPlaylistByTag(videos, targetTag) {
+  if (!targetTag) return videos;
+  const tagged = videos.filter(v => v.category === targetTag);
+  if (tagged.length) return tagged;
+  const untagged = videos.filter(v => !v.category);
+  return untagged.length ? untagged : videos;
+}
 
 function revealIntroVideo() {
   document.getElementById('introVideoPlayer').style.display = 'block';
@@ -777,11 +784,18 @@ function showSingleIntroVideo(youtubeId) {
     `<iframe src="https://www.youtube.com/embed/${youtubeId}" allowfullscreen style="width:100%;height:100%;border:0"></iframe>`;
 }
 
-fetch('/api/latest-video')
-  .then(res => res.ok ? res.json() : Promise.reject(new Error('최신 영상 조회 실패')))
-  .then(data => {
-    const ids = (data.videos && data.videos.length ? data.videos : [data]).map(v => v.videoId);
-    playIntroPlaylist(ids);
+Promise.all([
+  fetch('/api/latest-video').then(res => res.ok ? res.json() : Promise.reject(new Error('최신 영상 조회 실패'))),
+  db.collection('gym_status').doc('live').get().catch(() => null), // 연령 통계 조회 실패해도 영상 재생은 진행
+])
+  .then(([data, ageDoc]) => {
+    const ageGroup = ageDoc && ageDoc.exists ? ageDoc.data().ageGroup : null;
+    console.log('[매장 연령 통계]', ageGroup || '(데이터 없음 — 전체 재생목록 사용)');
+
+    const allVideos = data.videos && data.videos.length ? data.videos : [data];
+    const targetTag = ageGroupToTag(ageGroup);
+    const selected = pickPlaylistByTag(allVideos, targetTag);
+    playIntroPlaylist(selected.map(v => v.videoId));
   })
   .catch(() => {
     db.collection('site_content').doc('intro_video').get().then(doc => {
