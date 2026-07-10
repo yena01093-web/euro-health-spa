@@ -148,6 +148,7 @@
   .intro-video-box { margin-top: 48px; border-radius: 16px; overflow: hidden; border: 1px solid rgba(200,164,90,0.15); background: #0A1628; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; }
   .intro-video-box iframe { width: 100%; height: 100%; display: block; }
   .intro-video-empty { color: #4A5E72; font-size: 14px; text-align: center; padding: 20px; }
+  .intro-video-tabs { margin: 32px 0 8px; }
 
   /* ── Reviews ─────────────────────────────────────── */
   #reviews { background: #0F1E35; border-top: 1px solid rgba(200,164,90,0.1); border-bottom: 1px solid rgba(200,164,90,0.1); }
@@ -381,6 +382,11 @@
     <div class="eyebrow reveal">Video</div>
     <h2 class="section-title reveal">유로헬스클럽 소개 영상</h2>
     <p class="section-sub reveal">영상으로 먼저 만나보는 유로헬스클럽입니다.</p>
+    <div class="facility-tabs intro-video-tabs reveal" id="introVideoControls">
+      <button type="button" class="facility-tab" onclick="playRandomByTags(['YOUNG','MID'], this)">YOUNG</button>
+      <button type="button" class="facility-tab" onclick="playRandomByTags(['MID','TROT'], this)">OLD</button>
+      <button type="button" class="facility-tab" onclick="playAiRecommendation(this)">AI 추천</button>
+    </div>
     <div class="intro-video-box reveal" id="introVideoBox">
       <div class="intro-video-empty" id="introVideoEmpty">영상 준비중입니다</div>
       <div id="introVideoPlayer" style="display:none;width:100%;height:100%"></div>
@@ -724,6 +730,10 @@ const db = firebase.firestore();
 let introPlaylist = [];
 let introPlaylistIndex = 0;
 let introYtPlayer = null;
+let introMode = 'playlist'; // 'playlist': introPlaylist를 순서대로 순환 / 'ai': 곡이 끝날 때마다 AI가 다시 추천
+let allIntroVideos = []; // YOUNG/OLD/AI 추천 버튼에서 태그별·스마트 선곡에 사용
+let recentlyPlayedIds = []; // AI 추천의 "최근 재생곡 중복 방지"용 최근 재생 기록
+const RECENT_HISTORY_SIZE = 5;
 
 // 평균 연령대(gym_status/live의 ageGroup) → 유튜브 제목 태그([YOUNG]/[MID]) 매핑
 function ageGroupToTag(ageGroup) {
@@ -756,19 +766,27 @@ function loadYoutubeIframeApi() {
   });
 }
 
-function playIntroPlaylist(videoIds) {
-  introPlaylist = videoIds;
-  introPlaylistIndex = 0;
+// 플레이어가 이미 떠 있으면 iframe을 새로 만들지 않고 영상만 교체, 없으면 새로 생성.
+// onStateChange는 여기 한 곳에서만 등록하고, introMode(외부 변수)를 매번 다시 읽어 'playlist'/'ai' 중
+// 현재 재생 모드에 맞는 "다음 곡" 로직을 그때그때 실행한다.
+function ensureIntroPlayer(firstVideoId) {
   revealIntroVideo();
+  if (introYtPlayer && introYtPlayer.loadVideoById) {
+    introYtPlayer.loadVideoById(firstVideoId);
+    return;
+  }
   loadYoutubeIframeApi().then(() => {
     introYtPlayer = new YT.Player('introVideoPlayer', {
       width: '640',
       height: '360',
-      videoId: introPlaylist[0],
+      videoId: firstVideoId,
       playerVars: { rel: 0 },
       events: {
         onStateChange: (e) => {
-          if (e.data === YT.PlayerState.ENDED) {
+          if (e.data !== YT.PlayerState.ENDED) return;
+          if (introMode === 'ai') {
+            playAiPick();
+          } else {
             introPlaylistIndex = (introPlaylistIndex + 1) % introPlaylist.length;
             introYtPlayer.loadVideoById(introPlaylist[introPlaylistIndex]);
           }
@@ -776,6 +794,81 @@ function playIntroPlaylist(videoIds) {
       },
     });
   });
+}
+
+function playIntroPlaylist(videoIds) {
+  introMode = 'playlist';
+  introPlaylist = videoIds;
+  introPlaylistIndex = 0;
+  ensureIntroPlayer(introPlaylist[0]);
+}
+
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function setActiveIntroButton(btnEl) {
+  document.querySelectorAll('#introVideoControls .facility-tab').forEach(b => b.classList.remove('active'));
+  if (btnEl) btnEl.classList.add('active');
+}
+
+// YOUNG/OLD 버튼: 주어진 태그들(예: ['YOUNG','MID'])을 합친 곡 중 무작위로 섞어서 재생 (없으면 전체로 대체)
+function playRandomByTags(tags, btnEl) {
+  if (!allIntroVideos.length) {
+    alert('영상 목록을 아직 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
+    return;
+  }
+  const matched = allIntroVideos.filter(v => tags.includes(v.category));
+  const pool = matched.length ? matched : allIntroVideos;
+  playIntroPlaylist(shuffleArray(pool).map(v => v.videoId));
+  setActiveIntroButton(btnEl);
+}
+
+// AI 추천: 매장 시간대 분위기에 맞는 태그에 가중치를 줘서 곡을 고르되, 최근 재생한 곡은 제외해 반복을 피한다.
+// (실제 매장 방문객 통계가 아닌 "이 시간대엔 이런 회원이 많다"는 일반적인 가정에 기반한 휴리스틱)
+function timeOfDayTagWeights() {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 11) return { MID: 3, TROT: 3, YOUNG: 1 };  // 새벽·아침: 중장년층 회원 위주
+  if (hour >= 17 && hour < 22) return { YOUNG: 3, MID: 2, TROT: 1 }; // 저녁: 젊은층 회원 위주
+  return { YOUNG: 1, MID: 1, TROT: 1 };                               // 낮/심야: 골고루
+}
+
+function pickAiVideo() {
+  const notRecent = allIntroVideos.filter(v => !recentlyPlayedIds.includes(v.videoId));
+  const pool = notRecent.length ? notRecent : allIntroVideos; // 전부 최근 재생곡이면 제한 없이 전체에서 선택
+
+  const weights = timeOfDayTagWeights();
+  const weighted = [];
+  pool.forEach(v => {
+    const w = weights[v.category] || 1; // 태그 없는 공용 곡은 기본 가중치 1
+    for (let i = 0; i < w; i++) weighted.push(v);
+  });
+  return weighted[Math.floor(Math.random() * weighted.length)];
+}
+
+function playAiPick() {
+  const chosen = pickAiVideo();
+  if (!chosen) return;
+
+  recentlyPlayedIds.push(chosen.videoId);
+  if (recentlyPlayedIds.length > RECENT_HISTORY_SIZE) recentlyPlayedIds.shift();
+
+  introMode = 'ai';
+  ensureIntroPlayer(chosen.videoId);
+}
+
+function playAiRecommendation(btnEl) {
+  if (!allIntroVideos.length) {
+    alert('영상 목록을 아직 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
+    return;
+  }
+  playAiPick();
+  setActiveIntroButton(btnEl);
 }
 
 function showSingleIntroVideo(youtubeId) {
@@ -793,6 +886,7 @@ Promise.all([
     console.log('[매장 연령 통계]', ageGroup || '(데이터 없음 — 전체 재생목록 사용)');
 
     const allVideos = data.videos && data.videos.length ? data.videos : [data];
+    allIntroVideos = allVideos;
     const targetTag = ageGroupToTag(ageGroup);
     const selected = pickPlaylistByTag(allVideos, targetTag);
     playIntroPlaylist(selected.map(v => v.videoId));

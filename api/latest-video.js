@@ -15,7 +15,7 @@ module.exports = async (req, res) => {
     const entries = [...xml.matchAll(/<entry>([\s\S]*?)<\/entry>/g)];
     if (!entries.length) throw new Error('채널에 업로드된 영상이 없습니다');
 
-    // 제목 맨 앞의 [YOUNG] / [MID] 태그로 곡을 분류. 태그 없으면 category: null (모든 연령대 공용)
+    // 제목 맨 앞의 [YOUNG] / [MID] / [TROT] 태그로 곡을 분류. 태그 없으면 category: null (모든 연령대 공용)
     const videos = entries.map(m => {
       const entry = m[1];
       const videoIdMatch = entry.match(/<yt:videoId>([^<]+)<\/yt:videoId>/);
@@ -23,7 +23,7 @@ module.exports = async (req, res) => {
       if (!videoIdMatch) return null;
 
       const rawTitle = titleMatch ? decodeEntities(titleMatch[1]) : '';
-      const tagMatch = rawTitle.match(/^\s*\[(YOUNG|MID)\]\s*/i);
+      const tagMatch = rawTitle.match(/^\s*\[(YOUNG|MID|TROT)\]\s*/i);
       return {
         videoId: videoIdMatch[1],
         title: tagMatch ? rawTitle.slice(tagMatch[0].length) : rawTitle,
