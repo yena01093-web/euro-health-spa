@@ -735,7 +735,8 @@ let introYtPlayer = null;
 let introMode = 'playlist'; // 'playlist': introPlaylist를 순서대로 순환 / 'ai': 곡이 끝날 때마다 AI가 다시 추천
 let allIntroVideos = []; // YOUNG/OLD/AI 추천 버튼에서 태그별·스마트 선곡에 사용
 let recentlyPlayedIds = []; // AI 추천의 "최근 재생곡 중복 방지"용 최근 재생 기록
-const RECENT_HISTORY_SIZE = 5;
+let lastPlayedCategory = null; // 직전 곡 태그 — 같은 태그가 연달아 나오지 않도록 감점 처리
+const RECENT_HISTORY_SIZE = 10;
 
 // 평균 연령대(gym_status/live의 ageGroup) → 유튜브 제목 태그([YOUNG]/[MID]) 매핑
 function ageGroupToTag(ageGroup) {
@@ -844,11 +845,12 @@ function pickAiVideo() {
   const notRecent = allIntroVideos.filter(v => !recentlyPlayedIds.includes(v.videoId));
   const pool = notRecent.length ? notRecent : allIntroVideos; // 전부 최근 재생곡이면 제한 없이 전체에서 선택
 
-  const weights = timeOfDayTagWeights();
+  const timeWeights = timeOfDayTagWeights();
   const weighted = [];
   pool.forEach(v => {
-    const w = weights[v.category] || 1; // 태그 없는 공용 곡은 기본 가중치 1
-    for (let i = 0; i < w; i++) weighted.push(v);
+    let w = (timeWeights[v.category] || 1) * 10; // 소수 가중치도 다룰 수 있게 10배 스케일로 계산
+    if (v.category && v.category === lastPlayedCategory) w *= 0.3; // 직전 곡과 같은 태그면 확 줄여서 매번 다른 분위기로 섞이게 함
+    for (let i = 0; i < Math.round(w); i++) weighted.push(v);
   });
   return weighted[Math.floor(Math.random() * weighted.length)];
 }
@@ -859,6 +861,7 @@ function playAiPick() {
 
   recentlyPlayedIds.push(chosen.videoId);
   if (recentlyPlayedIds.length > RECENT_HISTORY_SIZE) recentlyPlayedIds.shift();
+  lastPlayedCategory = chosen.category;
 
   introMode = 'ai';
   ensureIntroPlayer(chosen.videoId);
