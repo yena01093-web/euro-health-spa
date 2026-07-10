@@ -734,9 +734,22 @@ let introPlaylistIndex = 0;
 let introYtPlayer = null;
 let introMode = 'playlist'; // 'playlist': introPlaylist를 순서대로 순환 / 'ai': 곡이 끝날 때마다 AI가 다시 추천
 let allIntroVideos = []; // YOUNG/OLD/AI 추천 버튼에서 태그별·스마트 선곡에 사용
-let recentlyPlayedIds = []; // AI 추천의 "최근 재생곡 중복 방지"용 최근 재생 기록
+let recentlyPlayedIds = []; // "최근 재생곡 중복 방지"용 최근 재생 기록 — AI 추천뿐 아니라 YOUNG/OLD 버튼으로 들은 곡도 여기 기록됨
 let lastPlayedCategory = null; // 직전 곡 태그 — 같은 태그가 연달아 나오지 않도록 감점 처리
 const RECENT_HISTORY_SIZE = 10;
+const RECENT_STORAGE_KEY = 'euroHealthRecentlyPlayed';
+
+// 새로고침해도 "최근 들은 곡" 기억이 유지되도록 localStorage에 저장/복원
+function loadRecentlyPlayed() {
+  try {
+    const raw = localStorage.getItem(RECENT_STORAGE_KEY);
+    if (raw) recentlyPlayedIds = JSON.parse(raw).slice(-RECENT_HISTORY_SIZE);
+  } catch (e) { /* localStorage 사용 불가 환경(시크릿 모드 등) — 빈 기록으로 시작 */ }
+}
+function saveRecentlyPlayed() {
+  try { localStorage.setItem(RECENT_STORAGE_KEY, JSON.stringify(recentlyPlayedIds)); } catch (e) {}
+}
+loadRecentlyPlayed();
 
 // 평균 연령대(gym_status/live의 ageGroup) → 유튜브 제목 태그([YOUNG]/[MID]) 매핑
 function ageGroupToTag(ageGroup) {
@@ -769,11 +782,24 @@ function loadYoutubeIframeApi() {
   });
 }
 
+// 어떤 방식으로 재생되든(자동 순환, YOUNG/OLD 버튼, AI 추천) 여기 한 곳에서 "방금 이 곡 들었다"를 기록해야
+// AI 추천이 다른 버튼으로 들은 곡까지 포함해서 중복을 피할 수 있다.
+function recordPlayed(videoId) {
+  recentlyPlayedIds = recentlyPlayedIds.filter((id) => id !== videoId); // 이미 있으면 맨 뒤로 재배치
+  recentlyPlayedIds.push(videoId);
+  if (recentlyPlayedIds.length > RECENT_HISTORY_SIZE) recentlyPlayedIds.shift();
+  saveRecentlyPlayed();
+
+  const video = allIntroVideos.find((v) => v.videoId === videoId);
+  lastPlayedCategory = video ? video.category : null;
+}
+
 // 플레이어가 이미 떠 있으면 iframe을 새로 만들지 않고 영상만 교체, 없으면 새로 생성.
 // onStateChange는 여기 한 곳에서만 등록하고, introMode(외부 변수)를 매번 다시 읽어 'playlist'/'ai' 중
 // 현재 재생 모드에 맞는 "다음 곡" 로직을 그때그때 실행한다.
 function ensureIntroPlayer(firstVideoId) {
   revealIntroVideo();
+  recordPlayed(firstVideoId);
   if (introYtPlayer && introYtPlayer.loadVideoById) {
     introYtPlayer.loadVideoById(firstVideoId);
     return;
@@ -791,7 +817,9 @@ function ensureIntroPlayer(firstVideoId) {
             playAiPick();
           } else {
             introPlaylistIndex = (introPlaylistIndex + 1) % introPlaylist.length;
-            introYtPlayer.loadVideoById(introPlaylist[introPlaylistIndex]);
+            const nextVideoId = introPlaylist[introPlaylistIndex];
+            recordPlayed(nextVideoId);
+            introYtPlayer.loadVideoById(nextVideoId);
           }
         },
       },
@@ -859,12 +887,8 @@ function playAiPick() {
   const chosen = pickAiVideo();
   if (!chosen) return;
 
-  recentlyPlayedIds.push(chosen.videoId);
-  if (recentlyPlayedIds.length > RECENT_HISTORY_SIZE) recentlyPlayedIds.shift();
-  lastPlayedCategory = chosen.category;
-
   introMode = 'ai';
-  ensureIntroPlayer(chosen.videoId);
+  ensureIntroPlayer(chosen.videoId); // 재생 기록(recentlyPlayedIds/lastPlayedCategory)은 ensureIntroPlayer에서 일괄 처리
 }
 
 function playAiRecommendation(btnEl) {
