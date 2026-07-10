@@ -783,7 +783,7 @@ function ensureIntroPlayer(firstVideoId) {
       width: '640',
       height: '360',
       videoId: firstVideoId,
-      playerVars: { rel: 0 },
+      playerVars: { rel: 0, cc_load_policy: 0 },
       events: {
         onStateChange: (e) => {
           if (e.data !== YT.PlayerState.ENDED) return;
