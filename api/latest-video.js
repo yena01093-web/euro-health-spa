@@ -101,9 +101,9 @@ module.exports = async (req, res) => {
       return true;
     });
 
-    // 제목 맨 앞의 [YOUNG] / [MID] / [TROT] 태그로 곡을 분류. 태그 없으면 category: null (모든 연령대 공용)
+    // 제목 맨 앞의 [YOUNG] / [MID] / [TROT] / [퓨전국악] 태그로 곡을 분류. 태그 없으면 category: null (모든 연령대 공용)
     const videos = deduped.map(({ videoId, title: rawTitle }) => {
-      const tagMatch = rawTitle.match(/^\s*\[(YOUNG|MID|TROT)\]\s*/i);
+      const tagMatch = rawTitle.match(/^\s*\[(YOUNG|MID|TROT|퓨전국악)\]\s*/i);
       return {
         videoId,
         title: tagMatch ? rawTitle.slice(tagMatch[0].length) : rawTitle,
